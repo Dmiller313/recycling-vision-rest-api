@@ -6,12 +6,15 @@ const HTTP_PORT = 8080;
 const mysql = require('mysql');
 
 var connection = mysql.createConnection({
-	host: "mymysqladmin.senecacollege.ca/",
-	user: "prj566_201a11",
-	password: "hfNK@5776",
-	database: "prj566_201a11"
-	//port: 3306
-});
+	host: "recycling-vision-prj.mysql.database.azure.com", 
+	user: "prj666g11@recycling-vision-prj", 
+	password: "Hv$IslC1Avqw", 
+	database: "prj666", 
+	port: 3306, 
+	ssl:{
+		ca:fs.readFileSync("BaltimoreCyberTrustRoot.crt.pem")}
+	}
+);
 
 connection.connect(function(err) {
 	if (err){
