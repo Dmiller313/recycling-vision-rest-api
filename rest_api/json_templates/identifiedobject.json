@@ -1,0 +1,12 @@
+{
+  "item1":{
+    "objectName":"Coffee cup",
+    "probabilityMatch":88.8,
+    "objectImage":"./sample-images/coffeecup.png"
+  },
+  "item2":{
+    "objectName":"Bottle",
+    "probabilityMatch":99.9,
+    "objectImage":"./sample-images/bottle.png"
+  }
+}

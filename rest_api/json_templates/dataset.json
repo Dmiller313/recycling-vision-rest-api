@@ -1,0 +1,34 @@
+{
+  "item1":{
+    "id":1,
+    "imageURI":"./sample-images/coffeecup.png"
+  },
+  "item2":{
+    "id":1,
+    "imageURI":"./sample-images/coffeecup2.png"
+  },
+  "item3":{
+    "id":1,
+    "imageURI":"./sample-images/coffeecup3.png"
+  },
+  "item4":{
+    "id":1,
+    "imageURI":"./sample-images/coffeecup4.png"
+  },
+  "item5":{
+    "id":2,
+    "imageURI":"./sample-images/cardboard.jpg"
+  },
+  "item6":{
+    "id":2,
+    "imageURI":"./sample-images/cardboard2.jpg"
+  },
+  "item7":{
+    "id":3,
+    "imageURI":"./sample-images/bottle.jpg"
+  },
+  "item8":{
+    "id":3,
+    "imageURI":"./sample-images/bottle.jpg"
+  }
+}

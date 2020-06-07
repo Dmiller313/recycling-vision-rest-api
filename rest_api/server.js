@@ -21,7 +21,7 @@ var pool = mysql.createPool({
 
 function base64Encode(file){
         var bitmap = fs.readFileSync(file);
-        return new Buffer(bitmap).toString('base64');
+        return new Buffer.from(bitmap).toString('base64');
 }
 
 /* ROUTES */
@@ -36,22 +36,24 @@ app.get('/dataset', (req, res)=>{
 });
 
 app.post('/dataset', (req, res)=>{
-        console.log(req.body);
-        /*pool.query("", function (err, result, fields){
-                if (err) throw err;
-                res.send(result);
-        })*/
         //This route will require knowledge of the Item to which it's linked
         //Necessary info in the request: itemID (or name, which can then perform a GET to /item to tell which itemID to use),
         //image to upload: filename? already-translated base64 string?
         //Possible TODO: configure route to be able to handle either file (will contain a period) or base64 string (will not contain a period) - could be handy for Keras
-        //INSERT INTO prj566_201a11.dataset (itemID, image) values(id, base64String)
-        console.log(req.body);
-        var base64String = base64Encode(req.body.imageURI);
-        var id = req.body.id.toString();        //TODO: protect this against sql injection
-        pool.query("INSERT INTO prj566_201a11.dataset (itemID, image) values(" + id + ", '" + base64String + "');", function (err, result, fields){
+
+        var sql = "INSERT INTO prj566_201a11.dataset (itemID, image) values ";
+        for(item in req.body){
+                sql += '(' + 
+                req.body[item].id.toString() +    //TODO: protect this against sql injection
+                ', \'' + 
+                base64Encode(req.body[item].imageURI) + 
+                '\'), ';
+        }
+        sql = sql.substring(0, sql.length - 2);
+    
+        pool.query(sql, function (err, result, fields){
                 if (err) throw err;
-                res.send(result);
+                //res.send(result);
                 res.redirect("/success");
         })
         return;
@@ -65,10 +67,20 @@ app.get('/item', (req, res)=>{
 });
 
 app.post('/item', (req, res)=>{
-        pool.query("", function (err, result, fields){
+        var sql = "INSERT INTO prj566_201a11.item (itemName) values ";
+        for(item in req.body){
+                sql += '(\'' + 
+                req.body[item].itemName.toString() +    //TODO: protect this against sql injection
+                '\'), ';
+        }
+        sql = sql.substring(0, sql.length - 2);
+    
+        pool.query(sql, function (err, result, fields){
                 if (err) throw err;
-                res.send(result);
+                //res.send(result);
+                res.redirect("/success");
         })
+        return;
 })
 
 app.get('/identifiedobject', (req, res)=>{
@@ -79,10 +91,24 @@ app.get('/identifiedobject', (req, res)=>{
 });
 
 app.post('/identifiedobject', (req, res)=>{
-        pool.query("", function (err, result, fields){
+        var sql = "INSERT INTO prj566_201a11.identifiedObject (objectName, probabilityMatch, objectImage) values ";
+        for(item in req.body){
+                sql += '(\'' + 
+                req.body[item].objectName.toString() +    //TODO: protect this against sql injection
+                '\', ' +
+                req.body[item].probabilityMatch.toString() +
+                ', \'' +
+                base64Encode(req.body[item].objectImage) +
+                '\'), ';
+        }
+        sql = sql.substring(0, sql.length - 2);
+    
+        pool.query(sql, function (err, result, fields){
                 if (err) throw err;
-                res.send(result);
+                //res.send(result);
+                res.redirect("/success");
         })
+        return;
 })
 
 app.get('/imagepack', (req, res)=>{
