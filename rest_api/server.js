@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const HTTP_PORT = 8080;
 const mysql = require('mysql');
-
+const datetime = require('node-datetime');
 
 var pool = mysql.createPool({
 	host: "recycling-vision-prj.mysql.database.azure.com", 
@@ -30,7 +30,7 @@ app.use(express.json());
 
 app.get('/dataset', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.dataset", function (err, result, fields){
-                if (err) throw err;
+                if (err) console.log(err);
                 res.send(result);
         })
 });
@@ -52,7 +52,7 @@ app.post('/dataset', (req, res)=>{
         sql = sql.substring(0, sql.length - 2);
     
         pool.query(sql, function (err, result, fields){
-                if (err) throw err;
+                if (err) console.log(err);
                 //res.send(result);
                 res.redirect("/success");
         })
@@ -61,7 +61,7 @@ app.post('/dataset', (req, res)=>{
 
 app.get('/item', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.item", function (err, result, fields){
-                if (err) throw err;
+                if (err) console.log(err);
                 res.send(result);
         })
 });
@@ -76,7 +76,7 @@ app.post('/item', (req, res)=>{
         sql = sql.substring(0, sql.length - 2);
     
         pool.query(sql, function (err, result, fields){
-                if (err) throw err;
+                if (err) console.log(err);
                 //res.send(result);
                 res.redirect("/success");
         })
@@ -85,7 +85,7 @@ app.post('/item', (req, res)=>{
 
 app.get('/identifiedobject', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.identifiedobject", function (err, result, fields){
-                if (err) throw err;
+                if (err) console.log(err);
                 res.send(result);
         })
 });
@@ -104,7 +104,7 @@ app.post('/identifiedobject', (req, res)=>{
         sql = sql.substring(0, sql.length - 2);
     
         pool.query(sql, function (err, result, fields){
-                if (err) throw err;
+                if (err) console.log(err);
                 //res.send(result);
                 res.redirect("/success");
         })
@@ -113,72 +113,140 @@ app.post('/identifiedobject', (req, res)=>{
 
 app.get('/imagepack', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.imagepack", function (err, result, fields){
-                if (err) throw err;
+                if (err) console.log(err);
                 res.send(result);
         })
 });
 
 app.post('/imagepack', (req, res)=>{
-        pool.query("", function (err, result, fields){
-                if (err) throw err;
-                res.send(result);
+        var sql = "INSERT INTO prj566_201a11.imagePack (image) values ";        //currently omitting stableFrames column
+        for(item in req.body){
+                sql += '(\'' + 
+                base64Encode(req.body[item].image) +
+                '\'), ';
+        }
+        sql = sql.substring(0, sql.length - 2);
+    
+        pool.query(sql, function (err, result, fields){
+                if (err) console.log(err);
+                //res.send(result);
+                res.redirect("/success");
         })
+        return;
 })
 
 app.get('/matchhistoryitem', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.matchhistoryitem", function (err, result, fields){
-                if (err) throw err;
+                if (err) console.log(err);
                 res.send(result);
         })
 });
 
 app.post('/matchhistoryitem', (req, res)=>{
-        pool.query("", function (err, result, fields){
-                if (err) throw err;
-                res.send(result);
+        var sql = "INSERT INTO prj566_201a11.matchhistoryitem (objectID, foundRecyclingInstruction, userID, matchDateTime) values ";
+        for(item in req.body){ 
+                sql += '(' + 
+                req.body[item].objectID.toString() +
+                ', \'' +
+                req.body[item].foundRecyclingInstruction.toString() +
+                '\', ' +
+                req.body[item].userID.toString() +      //protect against sql injection
+                ', \'' +
+                datetime.create(Date.now()).format('Y/m/d H:M:S') +
+                '\'), ';
+        }
+        sql = sql.substring(0, sql.length - 2);
+        pool.query(sql, function (err, result, fields){
+                if (err) console.log(err);
+                //res.send(result);
+                res.redirect("/success");
         })
+        return;
 })
 
 app.get('/recyclingmessage', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.recyclingmessage", function (err, result, fields){
-                if (err) throw err;
+                if (err) console.log(err);
                 res.send(result);
         })
 });
 
 app.post('/recyclingmessage', (req, res)=>{
-        pool.query("", function (err, result, fields){
-                if (err) throw err;
-                res.send(result);
+        var sql = "INSERT INTO prj566_201a11.recyclingmessage (message) values ";
+        for(item in req.body){
+                sql += '(\'' + 
+                req.body[item].message.toString() +    //TODO: protect this against sql injection
+                '\'), ';
+        }
+        sql = sql.substring(0, sql.length - 2);
+    
+        pool.query(sql, function (err, result, fields){
+                if (err) console.log(err);
+                //res.send(result);
+                res.redirect("/success");
         })
+        return;
 })
 
 app.get('/users', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.users", function (err, result, fields){
-                if (err) throw err;
+                if (err) console.log(err);
                 res.send(result);
         })
 });
 
+//TODO: may need password protection, ALL fields here need sql injection protection
 app.post('/users', (req, res)=>{
-        pool.query("", function (err, result, fields){
-                if (err) throw err;
-                res.send(result);
+        var sql = "INSERT INTO prj566_201a11.users (username, email, password, phoneNum, postalCode, dateOfBirth, validationStatus) values ";
+        for(item in req.body){ 
+                sql += '(\'' + 
+                req.body[item].username.toString() +
+                '\', \'' +
+                req.body[item].email.toString() +
+                '\', \'' +
+                req.body[item].password.toString() +
+                '\', \'' +
+                req.body[item].phoneNum.toString() +
+                '\', \'' +
+                req.body[item].postalCode.toString() +
+                '\', \'' +
+                req.body[item].dateOfBirth.toString() +
+                '\', \'' +
+                req.body[item].validationStatus.toString() + 
+                '\'), ';
+        }
+        sql = sql.substring(0, sql.length - 2);
+        pool.query(sql, function (err, result, fields){
+                if (err) console.log(err);
+                //res.send(result);
+                res.redirect("/success");
         })
+        return;
 })
 
 app.get('/validationemail', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.validationemail", function (err, result, fields){
-                if (err) throw err;
+                if (err) console.log(err);
                 res.send(result);
         })
 });
 
 app.post('/validationemail', (req, res)=>{
-        pool.query("", function (err, result, fields){
-                if (err) throw err;
-                res.send(result);
+        var sql = "INSERT INTO prj566_201a11.validationemail (timestamp, userID) values ";
+        for(item in req.body){ 
+                sql += '(\'' + 
+                datetime.create(Date.now()).format('Y/m/d H:M:S') +
+                '\', \'' +
+                req.body[item].userID.toString() +    //TODO: protect this against sql injection
+                '\'), ';
+        }
+        sql = sql.substring(0, sql.length - 2);
+        pool.query(sql, function (err, result, fields){
+                if (err) console.log(err);
+                //res.send(result);
+                res.redirect("/success");
         })
+        return;
 })
 
 

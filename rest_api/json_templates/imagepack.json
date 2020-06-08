@@ -1,0 +1,8 @@
+{
+  "item1":{
+    "image":"./sample-images/coffeecup.png"
+  },
+  "item2":{
+    "image":"./sample-images/coffeecup2.png"
+  }
+}

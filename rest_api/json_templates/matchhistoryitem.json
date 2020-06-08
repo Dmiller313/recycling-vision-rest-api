@@ -1,0 +1,12 @@
+{
+  "item1":{
+    "objectID":1,
+    "foundRecyclingInstruction":"Paper recycling",
+    "userID":1
+  },
+  "item2":{
+    "objectID":5,
+    "foundRecyclingInstruction":"Cannot be recycled",
+    "userID":2
+  }
+}

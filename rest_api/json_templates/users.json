@@ -1,0 +1,20 @@
+{
+  "item1":{
+    "username":"hunter",
+    "email":"hunter2@sample.com",
+    "password":"hunter2",
+    "phoneNum":"777-777-7777",
+    "postalCode":"H3H3H3",
+    "dateOfBirth":"1990-03-13",
+    "validationStatus":"false"
+  },
+  "item2":{
+    "username":"admin",
+    "email":"admin@sample.com",
+    "password":"password1",
+    "phoneNum":"333-333-3333",
+    "postalCode":"H4H4H4",
+    "dateOfBirth":"1991-04-14",
+    "validationStatus":"true"
+  }
+}
