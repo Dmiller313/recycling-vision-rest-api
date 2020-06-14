@@ -5,18 +5,28 @@ const fs = require('fs');
 const HTTP_PORT = 8080;
 const mysql = require('mysql');
 const datetime = require('node-datetime');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 var pool = mysql.createPool({
-	host: "recycling-vision-prj.mysql.database.azure.com", 
-	user: "prj666g11@recycling-vision-prj", 
-	password: "Hv$IslC1Avqw", 
-        database: "prj666",
+	host: process.env.DB_HOST, 
+	user: process.env.DB_USER, 
+	password: process.env.DB_PASS, 
+        database: process.env.DB_NAME,
         connectionLimit: 10,
         supportBigNumbers: true, //unnecessary
 	port: 3306, 
 	ssl:{
-		ca:fs.readFileSync("BaltimoreCyberTrustRoot.crt.pem")
+		ca:fs.readFileSync(process.env.DB_CERT)
 	}
+});
+
+var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+                user: process.env.RV_EMAIL,
+                pass: process.env.RV_PASS
+        }
 });
 
 function base64Encode(file){
@@ -24,13 +34,16 @@ function base64Encode(file){
         return new Buffer.from(bitmap).toString('base64');
 }
 
-/* ROUTES */
+/* DATABASE ROUTES */
 
 app.use(express.json());
 
 app.get('/dataset', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.dataset", function (err, result, fields){
-                if (err) console.log(err);
+                if (err) {
+                        console.log("Error retrieving from Dataset table");
+                        res.redirect("/failure");
+                }
                 res.send(result);
         })
 });
@@ -52,8 +65,10 @@ app.post('/dataset', (req, res)=>{
         sql = sql.substring(0, sql.length - 2);
     
         pool.query(sql, function (err, result, fields){
-                if (err) console.log(err);
-                //res.send(result);
+                if (err) {
+                        console.log("Error inserting into Dataset table");
+                        res.redirect("/failure");
+                }
                 res.redirect("/success");
         })
         return;
@@ -61,7 +76,10 @@ app.post('/dataset', (req, res)=>{
 
 app.get('/item', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.item", function (err, result, fields){
-                if (err) console.log(err);
+                if (err) {
+                        console.log("Error retrieving from Item table");
+                        res.redirect("/failure");
+                }
                 res.send(result);
         })
 });
@@ -76,8 +94,10 @@ app.post('/item', (req, res)=>{
         sql = sql.substring(0, sql.length - 2);
     
         pool.query(sql, function (err, result, fields){
-                if (err) console.log(err);
-                //res.send(result);
+                if (err) {
+                        console.log("Error inserting into Item table");
+                        res.redirect("/failure");
+                }
                 res.redirect("/success");
         })
         return;
@@ -85,7 +105,10 @@ app.post('/item', (req, res)=>{
 
 app.get('/identifiedobject', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.identifiedobject", function (err, result, fields){
-                if (err) console.log(err);
+                if (err) {
+                        console.log("Error retrieving from IdentifiedObject table");
+                        res.redirect("/failure");
+                }
                 res.send(result);
         })
 });
@@ -104,8 +127,10 @@ app.post('/identifiedobject', (req, res)=>{
         sql = sql.substring(0, sql.length - 2);
     
         pool.query(sql, function (err, result, fields){
-                if (err) console.log(err);
-                //res.send(result);
+                if (err) {
+                        console.log("Error inserting into IdentifiedObject table");
+                        res.redirect("/failure");
+                }
                 res.redirect("/success");
         })
         return;
@@ -113,7 +138,10 @@ app.post('/identifiedobject', (req, res)=>{
 
 app.get('/imagepack', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.imagepack", function (err, result, fields){
-                if (err) console.log(err);
+                if (err) {
+                        console.log("Error retrieving from ImagePack table");
+                        res.redirect("/failure");
+                }
                 res.send(result);
         })
 });
@@ -128,8 +156,10 @@ app.post('/imagepack', (req, res)=>{
         sql = sql.substring(0, sql.length - 2);
     
         pool.query(sql, function (err, result, fields){
-                if (err) console.log(err);
-                //res.send(result);
+                if (err) {
+                        console.log("Error inserting into ImagePack table");
+                        res.redirect("/failure");
+                }
                 res.redirect("/success");
         })
         return;
@@ -137,7 +167,10 @@ app.post('/imagepack', (req, res)=>{
 
 app.get('/matchhistoryitem', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.matchhistoryitem", function (err, result, fields){
-                if (err) console.log(err);
+                if (err) {
+                        console.log("Error retrieving from MatchHistoryItem table");
+                        res.redirect("/failure");
+                }
                 res.send(result);
         })
 });
@@ -157,7 +190,10 @@ app.post('/matchhistoryitem', (req, res)=>{
         }
         sql = sql.substring(0, sql.length - 2);
         pool.query(sql, function (err, result, fields){
-                if (err) console.log(err);
+                if (err) {
+                        console.log("Error inserting into MatchHistoryItem table");
+                        res.redirect("/failure");
+                }
                 //res.send(result);
                 res.redirect("/success");
         })
@@ -166,7 +202,10 @@ app.post('/matchhistoryitem', (req, res)=>{
 
 app.get('/recyclingmessage', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.recyclingmessage", function (err, result, fields){
-                if (err) console.log(err);
+                if (err) {
+                        console.log("Error retrieving from Users table");
+                        res.redirect("/failure");
+                }
                 res.send(result);
         })
 });
@@ -181,8 +220,10 @@ app.post('/recyclingmessage', (req, res)=>{
         sql = sql.substring(0, sql.length - 2);
     
         pool.query(sql, function (err, result, fields){
-                if (err) console.log(err);
-                //res.send(result);
+                if (err) {
+                        console.log("Error inserting into RecyclingMessage table");
+                        res.redirect("/failure");
+                }
                 res.redirect("/success");
         })
         return;
@@ -190,14 +231,17 @@ app.post('/recyclingmessage', (req, res)=>{
 
 app.get('/users', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.users", function (err, result, fields){
-                if (err) console.log(err);
+                if (err) {
+                        console.log("Error retrieving from Users table");
+                        res.redirect("/failure");
+                }
                 res.send(result);
         })
 });
 
 //TODO: may need password protection, ALL fields here need sql injection protection
-app.post('/users', (req, res)=>{
-        var sql = "INSERT INTO prj566_201a11.users (username, email, password, phoneNum, postalCode, dateOfBirth, validationStatus) values ";
+/*app.post('/users', (req, res)=>{
+        var sql = "INSERT INTO prj566_201a11.users (username, email, password, phoneNum, postalCode, dateOfBirth) values "//, validationStatus) values ";
         for(item in req.body){ 
                 sql += '(\'' + 
                 req.body[item].username.toString() +
@@ -211,22 +255,25 @@ app.post('/users', (req, res)=>{
                 req.body[item].postalCode.toString() +
                 '\', \'' +
                 req.body[item].dateOfBirth.toString() +
-                '\', \'' +
-                req.body[item].validationStatus.toString() + 
+                //'\', \'' +
+                //req.body[item].validationStatus.toString() + 
                 '\'), ';
         }
         sql = sql.substring(0, sql.length - 2);
         pool.query(sql, function (err, result, fields){
-                if (err) console.log(err);
+                if (err) console.log("Error inserting into Users table");
                 //res.send(result);
                 res.redirect("/success");
         })
         return;
-})
+})*/
 
 app.get('/validationemail', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.validationemail", function (err, result, fields){
-                if (err) console.log(err);
+                if (err) {
+                        console.log("Error retrieving from ValidationEmail table");
+                        res.redirect("/failure");
+                }
                 res.send(result);
         })
 });
@@ -242,13 +289,66 @@ app.post('/validationemail', (req, res)=>{
         }
         sql = sql.substring(0, sql.length - 2);
         pool.query(sql, function (err, result, fields){
-                if (err) console.log(err);
+                if (err) {
+                        console.log("Error inserting into ValidationEmail table");
+                        res.redirect("/failure");
+                }
                 //res.send(result);
                 res.redirect("/success");
         })
         return;
-})
+});
 
+/* EMAIL VALIDATION ROUTES */
+
+app.post('/emailer', (req, res)=>{
+        var valid = true;
+        var email = req.body.email;
+        valid = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/.test(email);
+                
+        if(valid){
+                var username = req.body.username;
+                var password = req.body.password;
+                var phoneNum = req.body.phoneNum;
+                var postalCode = req.body.postalCode;
+                var dateOfBirth = req.body.dateOfBirth;
+                
+                md5sum = crypto.createHash('md5');
+                hash = md5sum.update(crypto.randomBytes(1)).digest('hex');
+                var link = process.env.WEB_SITE + "/verify?hash=" + hash;
+                var mailOptions = {
+                        from: process.env.RV_EMAIL,
+                        to: email,
+                        subject: 'Please validate your Recycling Vision account',
+                        text: "You're almost all set to start using the Recycling Vision app! To verify your account, please visit the following link within the next 24 hours: " + link
+                }
+
+                var sql = "INSERT INTO prj566_201a11.users (username, email, password, phoneNum, postalCode, dateOfBirth, hash, validationStatus) values ('" +
+                        username + "', '" + email + "', '" + password + "', '" + phoneNum + "', '" + postalCode + "', '" + dateOfBirth + "', '" +
+                        hash + "', 0)";
+
+                pool.query(sql, function (err, result, fields){
+                        if (err) {
+                                console.log(err);
+                                console.log("Error inserting into Users table");
+                                res.redirect("/failure");
+                        }
+                })
+                transporter.sendMail(mailOptions);
+                res.redirect("/success");
+        }
+        else{
+                console.log("An error has occurred");
+        }
+});
+
+app.get('/verify', (req, res)=>{
+        pool.query("SELECT * FROM prj566_201a11.users WHERE hash = " + req.query.hash, function (err, result, fields){
+                if (err) console.log("This link is either expired or invalid");
+                
+                res.send(result);
+        })
+});
 
 /********************************************************************/
 
@@ -258,6 +358,10 @@ app.get('/', (request, response)=>{
 
 app.get('/success', (request, response)=>{
         response.send('request sent successfully');
+});
+
+app.get('/failure', (request, response)=>{
+        response.send('request sent unsuccessfully');
 });
 
 app.listen(HTTP_PORT, ()=>{

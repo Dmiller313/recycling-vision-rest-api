@@ -4,13 +4,24 @@
   "description": "This node.js app will serve as the REST API for the prj666 Recycling Vision project web server",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "author": "Omri Golan, Benjamin White, David Miller, Anojan Sothilingam",
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
     "mysql": "^2.18.1",
-    "node-datetime": "^2.1.2"
-  }
+    "node-datetime": "^2.1.2",
+    "nodemailer": "^6.4.8"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dmiller313/recycling-vision.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Dmiller313/recycling-vision/issues"
+  },
+  "homepage": "https://github.com/Dmiller313/recycling-vision#readme"
 }
