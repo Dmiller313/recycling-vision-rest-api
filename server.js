@@ -2,13 +2,11 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const fs = require('fs');
-const HTTP_PORT = 8080;
+const HTTP_PORT = process.env.PORT || 8080;
 const mysql = require('mysql');
 const datetime = require('node-datetime');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-
-app.set('port', (process.env.PORT || 5000));
 
 var pool = mysql.createPool({
 	host: process.env.DB_HOST, 
@@ -366,6 +364,6 @@ app.get('/failure', (request, response)=>{
         response.send('request sent unsuccessfully');
 });
 
-app.listen(app.get('port'), ()=>{
-        console.log('express server listening on ' + app.get('port'));
+app.listen(app.get(HTTP_PORT), ()=>{
+        console.log('express server listening on ' + HTTP_PORT;
 });
