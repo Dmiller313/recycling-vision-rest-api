@@ -8,6 +8,8 @@ const datetime = require('node-datetime');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
+app.set('port', (process.env.PORT || 5000));
+
 var pool = mysql.createPool({
 	host: process.env.DB_HOST, 
 	user: process.env.DB_USER, 
@@ -364,6 +366,6 @@ app.get('/failure', (request, response)=>{
         response.send('request sent unsuccessfully');
 });
 
-app.listen(HTTP_PORT, ()=>{
-        console.log('express server listening on ' + HTTP_PORT);
+app.listen(app.get('port'), ()=>{
+        console.log('express server listening on ' + app.get('port'));
 });
