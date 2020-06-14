@@ -343,10 +343,16 @@ app.post('/emailer', (req, res)=>{
 });
 
 app.get('/verify', (req, res)=>{
-        pool.query("SELECT * FROM prj566_201a11.users WHERE hash = " + req.query.hash, function (err, result, fields){
-                if (err) console.log("This link is either expired or invalid");
-                
-                res.send(result);
+        pool.query("SELECT * FROM prj566_201a11.users WHERE hash = '" + req.query.hash + "'", function (err, result, fields){
+                if (err) res.send("This link is either expired or invalid");
+                pool.query("UPDATE prj566_201a11.users SET hash = null, validationStatus = 1 WHERE hash = '" + req.query.hash + "'", function (err, result, fields){
+                        if(err) {
+                                console.log("Error updating user");
+                                console.log(err);
+                        }
+                });
+                res.send("Account verified!");
+                return;
         })
 });
 
@@ -364,6 +370,6 @@ app.get('/failure', (request, response)=>{
         response.send('request sent unsuccessfully');
 });
 
-app.listen(app.get(HTTP_PORT), ()=>{
-        console.log('express server listening on ' + HTTP_PORT;
+app.listen(HTTP_PORT, ()=>{
+        console.log('express server listening on ' + HTTP_PORT);
 });
