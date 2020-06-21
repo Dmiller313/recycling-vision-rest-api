@@ -200,13 +200,34 @@ app.post('/matchhistoryitem', (req, res)=>{
         return;
 })
 
+//GetAll RecyclingMessage
 app.get('/recyclingmessage', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.recyclingmessage", function (err, result, fields){
                 if (err) {
-                        console.log("Error retrieving from Users table");
+                        console.log("Error retrieving from RecyclingMessage table");
                         res.redirect("/failure");
                 }
                 res.send(result);
+        })
+});
+
+//GetOne RecyclingMessage - gets a random recycling message
+app.get('/recyclingmessage/single', (req, res)=>{
+        pool.query("SELECT count(*) as numMessages FROM prj566_201a11.recyclingmessage", function (err, result, fields){
+                if (err) {
+                        console.log("Error retrieving from RecyclingMessage table");
+                        res.redirect("/failure");
+                }
+                var rand = Math.floor(Math.random() * result[0].numMessages + 1);
+                //console.log(result[0].numMessages)
+                console.log(rand);
+                pool.query("SELECT message FROM prj566_201a11.recyclingmessage WHERE messageID = " + rand, function(err, result, fields){
+                        if (err) {
+                                console.log("Error retrieving message");
+                                res.redirect("/failure");
+                        }
+                        res.send(result)
+                });
         })
 });
 
