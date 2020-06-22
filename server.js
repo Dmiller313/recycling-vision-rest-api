@@ -219,8 +219,7 @@ app.get('/recyclingmessage/single', (req, res)=>{
                         res.redirect("/failure");
                 }
                 var rand = Math.floor(Math.random() * result[0].numMessages + 1);
-                //console.log(result[0].numMessages)
-                console.log(rand);
+
                 pool.query("SELECT message FROM prj566_201a11.recyclingmessage WHERE messageID = " + rand, function(err, result, fields){
                         if (err) {
                                 console.log("Error retrieving message");
@@ -348,13 +347,29 @@ app.post('/emailer', (req, res)=>{
                         username + "', '" + email + "', '" + password + "', '" + phoneNum + "', '" + postalCode + "', '" + dateOfBirth + "', '" +
                         hash + "', 0)";
 
+
+
                 pool.query(sql, function (err, result, fields){
                         if (err) {
                                 console.log(err);
                                 console.log("Error inserting into Users table");
                                 res.redirect("/failure");
+                                
                         }
-                })
+                        var insertedID = result.insertId;
+                        var emailSql = "INSERT INTO prj566_201a11.validationemail (timestamp, userID, recoveryEmail) values ('" +
+                        datetime.create(Date.now()).format('Y/m/d H:M:S') + "', " + insertedID + ", 0)";
+
+                        pool.query(emailSql, function (err, result, fields){
+                                if (err) {
+                                        console.log(err);
+                                        console.log("Error inserting into ValidationEmail table");
+                                        res.redirect("/failure");
+                                }
+                        });
+                });
+
+
                 transporter.sendMail(mailOptions);
                 res.redirect("/success");
         }
