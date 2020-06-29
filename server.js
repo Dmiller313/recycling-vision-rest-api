@@ -262,6 +262,7 @@ app.post('/recyclingmessage', (req, res)=>{
         return;
 })
 
+/*
 app.get('/users', (req, res)=>{
         pool.query("SELECT * FROM prj566_201a11.users", function (err, result, fields){
                 if (err) {
@@ -272,6 +273,26 @@ app.get('/users', (req, res)=>{
                 res.send(result);
         })
 });
+*/
+
+app.get('/login', (req, res)=>{
+        var sql = "SELECT password FROM prj566_201a11.users WHERE username = " +
+                pool.escape(req.body.username) +
+                ";"
+        pool.query(sql, function (err, result, fields){
+                if (err) {
+                        console.log("Error retrieving from Users table");
+                        res.redirect("/failure");
+                        return;
+                }
+                if(typeof result[0] !== 'undefined' && req.body.password == result[0].password) {
+                        res.sendStatus(200);
+                }
+                else{
+                        res.sendStatus(404);
+                }
+        })
+})
 
 //TODO: may need password protection, ALL fields here need sql injection protection
 /*app.post('/users', (req, res)=>{
