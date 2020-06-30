@@ -7,6 +7,7 @@ const mysql = require('mysql');
 const datetime = require('node-datetime');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const bodyParser = require('body-parser');
 
 var pool = mysql.createPool({
 	host: process.env.DB_HOST, 
@@ -33,6 +34,8 @@ function base64Encode(file){
         var bitmap = fs.readFileSync(file);
         return new Buffer.from(bitmap).toString('base64');
 }
+
+app.use(bodyParser.urlencoded({extended: true}));
 
 /* DATABASE ROUTES */
 
@@ -286,10 +289,10 @@ app.get('/login', (req, res)=>{
                         return;
                 }
                 if(typeof result[0] !== 'undefined' && req.body.password == result[0].password) {
-                        res.sendStatus(200);
+                        res.status(200).sendStatus(200);
                 }
                 else{
-                        res.sendStatus(404);
+                        res.status(404).sendStatus(404);
                 }
         })
 })
