@@ -278,7 +278,7 @@ app.get('/users', (req, res)=>{
 });
 */
 
-app.get('/login', (req, res)=>{
+app.post('/login', (req, res)=>{
         var sql = "SELECT password FROM prj566_201a11.users WHERE username = " +
                 pool.escape(req.body.username) +
                 ";"
