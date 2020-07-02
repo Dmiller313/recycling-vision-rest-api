@@ -430,6 +430,92 @@ app.get('/verify', (req, res)=>{
         })
 });
 
+/* Account Recovery Routes */
+
+app.get('/recover', (req, res)=>{ 
+        //query for user by email 
+        //TODO: select from validationemail table, only select rows with the 'recovery' flag set to 1 
+        pool.query("SELECT * FROM prj566_201a11.recoveryemail", function (err, result, fields){ 
+                if (err) { 
+                        console.log("Error retrieving from RecoveryEmail table"); 
+                        res.redirect("/failure");
+                        return;
+                } 
+                res.send(result); 
+        }) 
+});
+
+app.post('/recover', (req, res)=>{ 
+        //create and send a recovery email 
+        //TODO: insert into validationemail table, insert row with the 'recovery' flag set to 1 
+        var sql = "INSERT INTO prj566_201a11.recoveryemail (timestamp, userID) values "; 
+        for(item in req.body){  
+                sql += '(' +  
+                pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) + 
+                ', ' + 
+                pool.escape(req.body[item].userID.toString()) + 
+                '), '; 
+        } 
+        sql = sql.substring(0, sql.length - 2); 
+        pool.query(sql, function (err, result, fields){ 
+                if (err) { 
+                        console.log("Error inserting into RecoveryEmail table"); 
+                        res.redirect("/failure");
+                        return;
+                } 
+                res.redirect("/success"); 
+        }) 
+        return; 
+}); 
+
+app.post('/recoveryemailer', (req, res)=>{ 
+        var valid = true; 
+        var email = req.body.email; 
+        valid = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/.test(email);                
+
+        if(valid){ 
+
+                md5sum = crypto.createHash('md5'); 
+                hash = md5sum.update(crypto.randomBytes(1)).digest('hex'); 
+                var link = process.env.WEB_SITE + "/verify?hash=" + hash; 
+                var mailOptions = { 
+                        from: process.env.RV_EMAIL, 
+                        to: email, 
+                        subject: 'Recover your Recycling Vision account', 
+                        text: "A request to recover your Recycling Vision account has been created. Please visit the following link within 24 hours to recover your account: " + link 
+                } 
+                transporter.sendMail(mailOptions); 
+                res.redirect("/success"); 
+        } 
+        else{ 
+                console.log("An error has occurred"); 
+        } 
+}); 
+
+app.get('/accountrecovery', (req, res)=> { 
+        //TODO: modify query to support validationemail recovery flag 
+        pool.query("SELECT * FROM prj566_201a11.users WHERE hash = " + pool.escape(req.query.hash), function (err, result, fields){ 
+                if (err) {
+                        res.send("This recovery link is either expired or invalid");
+                        return;
+                }
+                res.send("Please enter new password for account recovery/");//TODO: serve the account recovery page once it is written 
+        }) 
+}); 
+
+app.post('/accountrecovery', (req, res)=>{ 
+        //update the user's password in the db 
+        //TODO:  
+        pool.query("UPDATE prj566_201a11.users SET password = " + pool.escape(req.query.password) + "WHERE userID = " + pool.escape(req.query.userID), function (err, result, fields){ 
+                if(err) { 
+                        console.log("Error updating user"); 
+                        return; 
+                } 
+        }); 
+        res.send("Account recovered! Please login with your new details."); 
+        return; 
+}); 
+
 /********************************************************************/
 
 app.get('/', (request, response)=>{
