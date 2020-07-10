@@ -371,7 +371,6 @@ app.post('/emailer', (req, res)=>{
                         if (err) {
                                 console.log("User already exists");
                                 valid = false;
-                                return;
                         }
                 });
         }
