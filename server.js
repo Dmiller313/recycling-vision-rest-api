@@ -387,28 +387,36 @@ app.post('/emailer', (req, res)=>{
                         pool.escape(username) + ", " + pool.escape(email) + ", " + pool.escape(password) + ", " + pool.escape(phoneNum) + ", " + pool.escape(postalCode)
                         + ", " + pool.escape(dateOfBirth) + ", " + pool.escape(hash) + ", 0)";
 
+                var error = false;
+
                 pool.query(sql, function (err, result, fields){
                         if (err) {
                                 console.log("Error inserting into Users table");
-                                res.redirect("/failure");
+                                error = true;
                                 return;
                         }
-                        var insertedID = result.insertId;
-                        var emailSql = "INSERT INTO prj566_201a11.validationemail (timestamp, userID, recoveryEmail) values (" +
-                        pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) + ", " + pool.escape(insertedID) + ", 0)";
-
-                        pool.query(emailSql, function (err, result, fields){
-                                if (err) {
-                                        console.log("Error inserting into ValidationEmail table");
-                                        res.redirect("/failure");
-                                        return;
-                                }
-                        });
+                        if(!error){
+                                var insertedID = result.insertId;
+                                var emailSql = "INSERT INTO prj566_201a11.validationemail (timestamp, userID, recoveryEmail) values (" +
+                                pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) + ", " + pool.escape(insertedID) + ", 0)";
+        
+                                pool.query(emailSql, function (err, result, fields){
+                                        if (err) {
+                                                console.log("Error inserting into ValidationEmail table");
+                                                error = true;
+                                                return;
+                                        }
+                                });
+                        } 
                 });
-
-
-                transporter.sendMail(mailOptions);
-                res.redirect("/success");
+                
+                if(error){
+                        res.redirect("/failure");
+                }
+                else{
+                        transporter.sendMail(mailOptions);
+                        res.redirect("/success");
+                }      
         }
         else{
                 res.redirect("/failure");
