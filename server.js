@@ -365,7 +365,17 @@ app.post('/emailer', (req, res)=>{
         var valid = true;
         var email = req.body.email;
         valid = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/.test(email);
-                
+        
+        if(valid){
+                pool.query("SELECT 'true' FROM users WHERE email = " + pool.escape(email), function (err, result, fields){
+                        if (err) {
+                                console.log("User already exists");
+                                valid = false;
+                                return;
+                        }
+                });
+        }
+
         if(valid){
                 var username = req.body.username;
                 var password = req.body.password;
@@ -393,7 +403,6 @@ app.post('/emailer', (req, res)=>{
                         if (err) {
                                 console.log("Error inserting into Users table");
                                 error = true;
-                                return;
                         }
                         if(!error){
                                 var insertedID = result.insertId;
@@ -404,7 +413,6 @@ app.post('/emailer', (req, res)=>{
                                         if (err) {
                                                 console.log("Error inserting into ValidationEmail table");
                                                 error = true;
-                                                return;
                                         }
                                 });
                         } 
@@ -412,14 +420,17 @@ app.post('/emailer', (req, res)=>{
                 
                 if(error){
                         res.redirect("/failure");
+                        return;
                 }
                 else{
                         transporter.sendMail(mailOptions);
                         res.redirect("/success");
+                        return;
                 }      
         }
         else{
                 res.redirect("/failure");
+                return;
         }
 });
 
