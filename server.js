@@ -365,17 +365,19 @@ app.post('/emailer', (req, res)=>{
         var valid = true;
         var email = req.body.email;
         valid = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/.test(email);
-
-        console.log(req.body);
-
         if(valid === true){
-                pool.query("SELECT 'true' FROM users WHERE email = " + pool.escape(email), function (err, result, fields){
+                pool.query("SELECT username FROM prj566_201a11.users WHERE email = " + pool.escape(email), function (err, result, fields){
                         if (err) {
-                                console.log("User already exists");
+                                console.log("User checking error");
                                 res.status(404).sendStatus(404)
                                 return;
                         }
                         else{
+                                if(result[0] != undefined){
+                                        console.log("User already exists");
+                                        res.status(404).sendStatus(404)
+                                        return;
+                                }
                                 var username = req.body.username;
                                 var password = req.body.password;
                                 var phoneNum = req.body.phoneNum;
