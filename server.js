@@ -366,6 +366,8 @@ app.post('/emailer', (req, res)=>{
         var email = req.body.email;
         valid = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/.test(email);
 
+        console.log(req.body);
+
         if(valid === true){
                 pool.query("SELECT 'true' FROM users WHERE email = " + pool.escape(email), function (err, result, fields){
                         if (err) {
