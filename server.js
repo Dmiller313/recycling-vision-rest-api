@@ -297,6 +297,28 @@ app.post('/login', (req, res)=>{
         })
 })
 
+app.get('/exists', (req, res) =>{
+        var sql = "SELECT username FROM prj566_201a11.users WHERE email = " + pool.escape(req.body.email);
+        pool.query(sql, function (err, result, fields){  
+                if (err) {
+                        console.log("User checking error");
+                        res.status(400).sendStatus(400)
+                        return;
+                }
+                else{
+                        if(result[0] != undefined){
+                                console.log("User already exists");
+                                res.status(400).json({status:"exists"});
+                                return;
+                        }
+                        else{
+                                res.status(200).json({status:"available"});
+                                return;
+                        }
+                }
+        });
+})
+
 //TODO: may need password protection, ALL fields here need sql injection protection
 /*app.post('/users', (req, res)=>{
         var sql = "INSERT INTO prj566_201a11.users (username, email, password, phoneNum, postalCode, dateOfBirth) values "//, validationStatus) values ";
