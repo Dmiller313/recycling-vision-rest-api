@@ -369,13 +369,13 @@ app.post('/emailer', (req, res)=>{
                 pool.query("SELECT username FROM prj566_201a11.users WHERE email = " + pool.escape(email), function (err, result, fields){
                         if (err) {
                                 console.log("User checking error");
-                                res.status(404).sendStatus(404)
+                                res.status(400).sendStatus(400)
                                 return;
                         }
                         else{
                                 if(result[0] != undefined){
                                         console.log("User already exists");
-                                        res.status(404).sendStatus(404)
+                                        res.status(400).sendStatus(400)
                                         return;
                                 }
                                 var username = req.body.username;
@@ -419,20 +419,21 @@ app.post('/emailer', (req, res)=>{
                                                         }
                                                         else{
                                                                 transporter.sendMail(mailOptions);
-                                                                res.status(200).sendStatus(200);
+                                                                res.setHeader('Content-Type', 'application/json');
+                                                                res.status(200).json({status:"success"});
                                                                 return;
                                                         }
                                                 });
                                         }
                                         else{
-                                                res.status(404).sendStatus(404);
+                                                res.status(400).sendStatus(400);
                                         }
                                 });                
                         }
                 });
         }
         else{
-                res.status(404).sendStatus(404);
+                res.status(400).sendStatus(400);
         }
 });
 
