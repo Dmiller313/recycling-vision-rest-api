@@ -365,71 +365,70 @@ app.post('/emailer', (req, res)=>{
         var valid = true;
         var email = req.body.email;
         valid = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/.test(email);
-        
-        if(valid){
+
+        if(valid === true){
                 pool.query("SELECT 'true' FROM users WHERE email = " + pool.escape(email), function (err, result, fields){
                         if (err) {
                                 console.log("User already exists");
-                                valid = false;
+                                res.redirect("/failure");
+                                return;
                         }
-                });
-        }
-
-        if(valid){
-                var username = req.body.username;
-                var password = req.body.password;
-                var phoneNum = req.body.phoneNum;
-                var postalCode = req.body.postalCode;
-                var dateOfBirth = req.body.dateOfBirth;
-                
-                md5sum = crypto.createHash('md5');
-                hash = md5sum.update(crypto.randomBytes(1)).digest('hex');
-                var link = process.env.WEB_SITE + "/verify?hash=" + hash;
-                var mailOptions = {
-                        from: process.env.RV_EMAIL,
-                        to: email,
-                        subject: 'Please validate your Recycling Vision account',
-                        text: "You're almost all set to start using the Recycling Vision app! To verify your account, please visit the following link within the next 24 hours: " + link
-                }
-
-                var sql = "INSERT INTO prj566_201a11.users (username, email, password, phoneNum, postalCode, dateOfBirth, hash, validationStatus) values (" +
-                        pool.escape(username) + ", " + pool.escape(email) + ", " + pool.escape(password) + ", " + pool.escape(phoneNum) + ", " + pool.escape(postalCode)
-                        + ", " + pool.escape(dateOfBirth) + ", " + pool.escape(hash) + ", 0)";
-
-                var error = false;
-
-                pool.query(sql, function (err, result, fields){
-                        if (err) {
-                                console.log("Error inserting into Users table");
-                                error = true;
-                        }
-                        if(!error){
-                                var insertedID = result.insertId;
-                                var emailSql = "INSERT INTO prj566_201a11.validationemail (timestamp, userID, recoveryEmail) values (" +
-                                pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) + ", " + pool.escape(insertedID) + ", 0)";
-        
-                                pool.query(emailSql, function (err, result, fields){
+                        else{
+                                var username = req.body.username;
+                                var password = req.body.password;
+                                var phoneNum = req.body.phoneNum;
+                                var postalCode = req.body.postalCode;
+                                var dateOfBirth = req.body.dateOfBirth;
+                                
+                                md5sum = crypto.createHash('md5');
+                                hash = md5sum.update(crypto.randomBytes(1)).digest('hex');
+                                var link = process.env.WEB_SITE + "/verify?hash=" + hash;
+                                var mailOptions = {
+                                        from: process.env.RV_EMAIL,
+                                        to: email,
+                                        subject: 'Please validate your Recycling Vision account',
+                                        text: "You're almost all set to start using the Recycling Vision app! To verify your account, please visit the following link within the next 24 hours: " + link
+                                }
+                        
+                                var sql = "INSERT INTO prj566_201a11.users (username, email, password, phoneNum, postalCode, dateOfBirth, hash, validationStatus) values (" +
+                                        pool.escape(username) + ", " + pool.escape(email) + ", " + pool.escape(password) + ", " + pool.escape(phoneNum) + ", " + pool.escape(postalCode)
+                                        + ", " + pool.escape(dateOfBirth) + ", " + pool.escape(hash) + ", 0)";
+                        
+                                var error = false;
+                        
+                                pool.query(sql, function (err, result, fields){
                                         if (err) {
-                                                console.log("Error inserting into ValidationEmail table");
+                                                console.log("Error inserting into Users table");
                                                 error = true;
                                         }
-                                });
-                        } 
+                        
+                                        if(error !== true){
+                                                var insertedID = result.insertId;
+                                                var emailSql = "INSERT INTO prj566_201a11.validationemail (timestamp, userID, recoveryEmail) values (" +
+                                                pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) + ", " + pool.escape(insertedID) + ", 0)";
+                        
+                                                pool.query(emailSql, function (err, result, fields){
+                                                        if (err) {
+                                                                console.log("Error inserting into ValidationEmail table");
+                                                                res.redirect("/failure");
+                                                                return;
+                                                        }
+                                                        else{
+                                                                transporter.sendMail(mailOptions);
+                                                                res.redirect("/success");
+                                                                return;
+                                                        }
+                                                });
+                                        }
+                                        else{
+                                                res.redirect("/failure");
+                                        }
+                                });                
+                        }
                 });
-                
-                if(error){
-                        res.redirect("/failure");
-                        return;
-                }
-                else{
-                        transporter.sendMail(mailOptions);
-                        res.redirect("/success");
-                        return;
-                }      
         }
         else{
                 res.redirect("/failure");
-                return;
         }
 });
 
