@@ -370,7 +370,7 @@ app.post('/emailer', (req, res)=>{
                 pool.query("SELECT 'true' FROM users WHERE email = " + pool.escape(email), function (err, result, fields){
                         if (err) {
                                 console.log("User already exists");
-                                res.redirect("/failure");
+                                res.status(404).sendStatus(404)
                                 return;
                         }
                         else{
@@ -410,25 +410,25 @@ app.post('/emailer', (req, res)=>{
                                                 pool.query(emailSql, function (err, result, fields){
                                                         if (err) {
                                                                 console.log("Error inserting into ValidationEmail table");
-                                                                res.redirect("/failure");
+                                                                res.status(404).sendStatus(404);
                                                                 return;
                                                         }
                                                         else{
                                                                 transporter.sendMail(mailOptions);
-                                                                res.redirect("/success");
+                                                                res.status(200).sendStatus(200);
                                                                 return;
                                                         }
                                                 });
                                         }
                                         else{
-                                                res.redirect("/failure");
+                                                res.status(404).sendStatus(404);
                                         }
                                 });                
                         }
                 });
         }
         else{
-                res.redirect("/failure");
+                res.status(404).sendStatus(404);
         }
 });
 
