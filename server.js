@@ -42,7 +42,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.json());
 
 app.get('/dataset', (req, res)=>{
-        pool.query("SELECT * FROM prj566_201a11.dataset", function (err, result, fields){
+        pool.query("SELECT * FROM dataset", function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving from Dataset table");
                         res.redirect("/failure");
@@ -58,7 +58,7 @@ app.post('/dataset', (req, res)=>{
         //image to upload: filename? already-translated base64 string?
         //Possible TODO: configure route to be able to handle either file (will contain a period) or base64 string (will not contain a period) - could be handy for Keras
 
-        var sql = "INSERT INTO prj566_201a11.dataset (itemID, image) values ";
+        var sql = "INSERT INTO dataset (itemID, image) values ";
         for(item in req.body){
                 sql += '(' + 
                 pool.escape(req.body[item].id.toString()) + 
@@ -80,7 +80,7 @@ app.post('/dataset', (req, res)=>{
 })
 
 app.get('/item', (req, res)=>{
-        pool.query("SELECT * FROM prj566_201a11.item", function (err, result, fields){
+        pool.query("SELECT * FROM item", function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving from Item table");
                         res.redirect("/failure");
@@ -91,7 +91,7 @@ app.get('/item', (req, res)=>{
 });
 
 app.post('/item', (req, res)=>{
-        var sql = "INSERT INTO prj566_201a11.item (itemName) values ";
+        var sql = "INSERT INTO item (itemName) values ";
         for(item in req.body){
                 sql += '(' + 
                 pool.escape(req.body[item].itemName.toString()) +
@@ -111,7 +111,7 @@ app.post('/item', (req, res)=>{
 })
 
 app.get('/identifiedobject', (req, res)=>{
-        pool.query("SELECT * FROM prj566_201a11.identifiedobject", function (err, result, fields){
+        pool.query("SELECT * FROM identifiedobject", function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving from IdentifiedObject table");
                         res.redirect("/failure");
@@ -122,7 +122,7 @@ app.get('/identifiedobject', (req, res)=>{
 });
 
 app.post('/identifiedobject', (req, res)=>{
-        var sql = "INSERT INTO prj566_201a11.identifiedObject (objectName, probabilityMatch, objectImage) values ";
+        var sql = "INSERT INTO identifiedObject (objectName, probabilityMatch, objectImage) values ";
         for(item in req.body){
                 sql += '(' + 
                 pool.escape(req.body[item].objectName.toString()) +
@@ -146,7 +146,7 @@ app.post('/identifiedobject', (req, res)=>{
 })
 
 app.get('/imagepack', (req, res)=>{
-        pool.query("SELECT * FROM prj566_201a11.imagepack", function (err, result, fields){
+        pool.query("SELECT * FROM imagepack", function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving from ImagePack table");
                         res.redirect("/failure");
@@ -157,7 +157,7 @@ app.get('/imagepack', (req, res)=>{
 });
 
 app.post('/imagepack', (req, res)=>{
-        var sql = "INSERT INTO prj566_201a11.imagePack (image) values ";        //currently omitting stableFrames column
+        var sql = "INSERT INTO imagePack (image) values ";        //currently omitting stableFrames column
         for(item in req.body){
                 sql += '(' + 
                 pool.escape(base64Encode(req.body[item].image)) +
@@ -177,7 +177,7 @@ app.post('/imagepack', (req, res)=>{
 })
 
 app.get('/matchhistoryitem', (req, res)=>{
-        pool.query("SELECT * FROM prj566_201a11.matchhistoryitem", function (err, result, fields){
+        pool.query("SELECT * FROM matchhistoryitem", function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving from MatchHistoryItem table");
                         res.redirect("/failure");
@@ -188,7 +188,7 @@ app.get('/matchhistoryitem', (req, res)=>{
 });
 
 app.post('/matchhistoryitem', (req, res)=>{
-        var sql = "INSERT INTO prj566_201a11.matchhistoryitem (objectID, foundRecyclingInstruction, userID, matchDateTime) values ";
+        var sql = "INSERT INTO matchhistoryitem (objectID, foundRecyclingInstruction, userID, matchDateTime) values ";
         for(item in req.body){ 
                 sql += '(' + 
                 pool.escape(req.body[item].objectID.toString()) +
@@ -214,7 +214,7 @@ app.post('/matchhistoryitem', (req, res)=>{
 
 //GetAll RecyclingMessage
 app.get('/recyclingmessage', (req, res)=>{
-        pool.query("SELECT * FROM prj566_201a11.recyclingmessage", function (err, result, fields){
+        pool.query("SELECT * FROM recyclingmessage", function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving from RecyclingMessage table");
                         res.redirect("/failure");
@@ -226,7 +226,7 @@ app.get('/recyclingmessage', (req, res)=>{
 
 //GetOne RecyclingMessage - gets a random recycling message
 app.get('/recyclingmessage/single', (req, res)=>{
-        pool.query("SELECT count(*) as numMessages FROM prj566_201a11.recyclingmessage", function (err, result, fields){
+        pool.query("SELECT count(*) as numMessages FROM recyclingmessage", function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving from RecyclingMessage table");
                         res.redirect("/failure");
@@ -234,7 +234,7 @@ app.get('/recyclingmessage/single', (req, res)=>{
                 }
                 var rand = Math.floor(Math.random() * result[0].numMessages + 1);
 
-                pool.query("SELECT message FROM prj566_201a11.recyclingmessage WHERE messageID = " + rand, function(err, result, fields){
+                pool.query("SELECT message FROM recyclingmessage WHERE messageID = " + rand, function(err, result, fields){
                         if (err) {
                                 console.log("Error retrieving message");
                                 res.redirect("/failure");
@@ -246,7 +246,7 @@ app.get('/recyclingmessage/single', (req, res)=>{
 });
 
 app.post('/recyclingmessage', (req, res)=>{
-        var sql = "INSERT INTO prj566_201a11.recyclingmessage (message) values ";
+        var sql = "INSERT INTO recyclingmessage (message) values ";
         for(item in req.body){
                 sql += '(' + 
                 pool.escape(req.body[item].message.toString()) +
@@ -267,7 +267,7 @@ app.post('/recyclingmessage', (req, res)=>{
 
 /*
 app.get('/users', (req, res)=>{
-        pool.query("SELECT * FROM prj566_201a11.users", function (err, result, fields){
+        pool.query("SELECT * FROM users", function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving from Users table");
                         res.redirect("/failure");
@@ -279,7 +279,7 @@ app.get('/users', (req, res)=>{
 */
 
 app.post('/login', (req, res)=>{
-        var sql = "SELECT password FROM prj566_201a11.users WHERE username = " +
+        var sql = "SELECT password FROM users WHERE username = " +
                 pool.escape(req.body.username) +
                 ";"
         pool.query(sql, function (err, result, fields){
@@ -298,7 +298,7 @@ app.post('/login', (req, res)=>{
 })
 
 app.get('/exists', (req, res) =>{
-        var sql = "SELECT username FROM prj566_201a11.users WHERE email = " + pool.escape(req.body.email);
+        var sql = "SELECT username FROM users WHERE email = " + pool.escape(req.body.email);
         pool.query(sql, function (err, result, fields){  
                 if (err) {
                         console.log("User checking error");
@@ -321,7 +321,7 @@ app.get('/exists', (req, res) =>{
 
 //TODO: may need password protection, ALL fields here need sql injection protection
 /*app.post('/users', (req, res)=>{
-        var sql = "INSERT INTO prj566_201a11.users (username, email, password, phoneNum, postalCode, dateOfBirth) values "//, validationStatus) values ";
+        var sql = "INSERT INTO users (username, email, password, phoneNum, postalCode, dateOfBirth) values "//, validationStatus) values ";
         for(item in req.body){ 
                 sql += '(' + 
                 pool.escape(req.body[item].username.toString()) +
@@ -349,7 +349,7 @@ app.get('/exists', (req, res) =>{
 })*/
 
 app.get('/validationemail', (req, res)=>{
-        pool.query("SELECT * FROM prj566_201a11.validationemail", function (err, result, fields){
+        pool.query("SELECT * FROM validationemail", function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving from ValidationEmail table");
                         res.redirect("/failure");
@@ -360,7 +360,7 @@ app.get('/validationemail', (req, res)=>{
 });
 
 app.post('/validationemail', (req, res)=>{
-        var sql = "INSERT INTO prj566_201a11.validationemail (timestamp, userID) values ";
+        var sql = "INSERT INTO validationemail (timestamp, userID) values ";
         for(item in req.body){ 
                 sql += '(' + 
                 pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) +
@@ -388,7 +388,7 @@ app.post('/emailer', (req, res)=>{
         var email = req.body.email;
         valid = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/.test(email);
         if(valid === true){
-                pool.query("SELECT username FROM prj566_201a11.users WHERE email = " + pool.escape(email), function (err, result, fields){
+                pool.query("SELECT username FROM users WHERE email = " + pool.escape(email), function (err, result, fields){
                         if (err) {
                                 console.log("User checking error");
                                 res.status(400).sendStatus(400)
@@ -416,7 +416,7 @@ app.post('/emailer', (req, res)=>{
                                         text: "You're almost all set to start using the Recycling Vision app! To verify your account, please visit the following link within the next 24 hours: " + link
                                 }
                         
-                                var sql = "INSERT INTO prj566_201a11.users (username, email, password, phoneNum, postalCode, dateOfBirth, hash, validationStatus) values (" +
+                                var sql = "INSERT INTO users (username, email, password, phoneNum, postalCode, dateOfBirth, hash, validationStatus) values (" +
                                         pool.escape(username) + ", " + pool.escape(email) + ", " + pool.escape(password) + ", " + pool.escape(phoneNum) + ", " + pool.escape(postalCode)
                                         + ", " + pool.escape(dateOfBirth) + ", " + pool.escape(hash) + ", 0)";
                         
@@ -430,7 +430,7 @@ app.post('/emailer', (req, res)=>{
                         
                                         if(error !== true){
                                                 var insertedID = result.insertId;
-                                                var emailSql = "INSERT INTO prj566_201a11.validationemail (timestamp, userID, recoveryEmail) values (" +
+                                                var emailSql = "INSERT INTO validationemail (timestamp, userID, recoveryEmail) values (" +
                                                 pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) + ", " + pool.escape(insertedID) + ", 0)";
                         
                                                 pool.query(emailSql, function (err, result, fields){
@@ -460,9 +460,9 @@ app.post('/emailer', (req, res)=>{
 });
 
 app.get('/verify', (req, res)=>{
-        pool.query("SELECT * FROM prj566_201a11.users WHERE hash = '" + req.query.hash + "'", function (err, result, fields){
+        pool.query("SELECT * FROM users WHERE hash = '" + req.query.hash + "'", function (err, result, fields){
                 if (err) res.send("This link is either expired or invalid");
-                pool.query("UPDATE prj566_201a11.users SET hash = null, validationStatus = 1 WHERE hash = " 
+                pool.query("UPDATE users SET hash = null, validationStatus = 1 WHERE hash = " 
                 + pool.escape(req.query.hash), function (err, result, fields){
                         if(err) {
                                 console.log("Error updating user");
@@ -479,7 +479,7 @@ app.get('/verify', (req, res)=>{
 app.get('/recover', (req, res)=>{ 
         //query for user by email 
         //TODO: select from validationemail table, only select rows with the 'recovery' flag set to 1 
-        pool.query("SELECT * FROM prj566_201a11.recoveryemail", function (err, result, fields){ 
+        pool.query("SELECT * FROM recoveryemail", function (err, result, fields){ 
                 if (err) { 
                         console.log("Error retrieving from RecoveryEmail table"); 
                         res.redirect("/failure");
@@ -492,7 +492,7 @@ app.get('/recover', (req, res)=>{
 app.post('/recover', (req, res)=>{ 
         //create and send a recovery email 
         //TODO: insert into validationemail table, insert row with the 'recovery' flag set to 1 
-        var sql = "INSERT INTO prj566_201a11.recoveryemail (timestamp, userID) values "; 
+        var sql = "INSERT INTO recoveryemail (timestamp, userID) values "; 
         for(item in req.body){  
                 sql += '(' +  
                 pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) + 
@@ -538,7 +538,7 @@ app.post('/recoveryemailer', (req, res)=>{
 
 app.get('/accountrecovery', (req, res)=> { 
         //TODO: modify query to support validationemail recovery flag 
-        pool.query("SELECT * FROM prj566_201a11.users WHERE hash = " + pool.escape(req.query.hash), function (err, result, fields){ 
+        pool.query("SELECT * FROM users WHERE hash = " + pool.escape(req.query.hash), function (err, result, fields){ 
                 if (err) {
                         res.send("This recovery link is either expired or invalid");
                         return;
@@ -550,7 +550,7 @@ app.get('/accountrecovery', (req, res)=> {
 app.post('/accountrecovery', (req, res)=>{ 
         //update the user's password in the db 
         //TODO:  
-        pool.query("UPDATE prj566_201a11.users SET password = " + pool.escape(req.query.password) + "WHERE userID = " + pool.escape(req.query.userID), function (err, result, fields){ 
+        pool.query("UPDATE users SET password = " + pool.escape(req.query.password) + "WHERE userID = " + pool.escape(req.query.userID), function (err, result, fields){ 
                 if(err) { 
                         console.log("Error updating user"); 
                         return; 
