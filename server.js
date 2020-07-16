@@ -285,14 +285,17 @@ app.post('/login', (req, res)=>{
         pool.query(sql, function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving from Users table");
-                        res.redirect("/failure");
+                        res.setHeader('Content-Type', 'application/json');
+                        res.status(400).json({status:"error"});
                         return;
                 }
                 if(typeof result[0] !== 'undefined' && req.body.password == result[0].password) {
-                        res.status(200).sendStatus(200);
+                        res.setHeader('Content-Type', 'application/json');
+                        res.status(200).json({status:"success"});
                 }
                 else{
-                        res.status(404).sendStatus(404);
+                        res.setHeader('Content-Type', 'application/json');
+                        res.status(403).json({status:"unauthorized"});
                 }
         })
 })
@@ -436,7 +439,7 @@ app.post('/emailer', (req, res)=>{
                                                 pool.query(emailSql, function (err, result, fields){
                                                         if (err) {
                                                                 console.log("Error inserting into ValidationEmail table");
-                                                                res.status(404).sendStatus(404);
+                                                                res.status(400).sendStatus(400);
                                                                 return;
                                                         }
                                                         else{
