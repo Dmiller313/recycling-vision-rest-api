@@ -420,13 +420,8 @@ app.post('/emailer', (req, res)=>{
                                         res.status(400).sendStatus(400)
                                         return;
                                 }
-                                var salt = crypto.randomBytes(32).toString("hex");
-                                crypto.scrypt(req.body.password, salt, 32, (err, derivedKey) => {
-                                        if (err) throw err;
-                                        var password = derivedKey.toString('hex');
-                                    });
                                 var username = req.body.username;
-                                //var password = req.body.password;
+                                var password = req.body.password;
                                 var phoneNum = req.body.phoneNum;
                                 var postalCode = req.body.postalCode;
                                 var dateOfBirth = req.body.dateOfBirth;
