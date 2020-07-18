@@ -279,7 +279,7 @@ app.get('/users', (req, res)=>{
 */
 
 app.post('/login', (req, res)=>{
-        var sql = "SELECT password FROM users WHERE username = " +
+        var sql = "SELECT password, salt FROM users WHERE username = " +
                 pool.escape(req.body.username) +
                 ";"
         pool.query(sql, function (err, result, fields){
@@ -289,9 +289,23 @@ app.post('/login', (req, res)=>{
                         res.status(400).json({status:"error"});
                         return;
                 }
-                if(typeof result[0] !== 'undefined' && req.body.password == result[0].password) {
-                        res.setHeader('Content-Type', 'application/json');
-                        res.status(200).json({status:"success"});
+                if(typeof result[0] !== 'undefined') {
+                        var databaseUserSalt = result[0].salt;
+                        crypto.scrypt(req.body.password, databaseUserSalt, 32, (error, derivedKey) => {
+                                if (error) {
+                                        console.log("Error hashing password:\n" + error);
+                                }
+                                if (derivedKey.toString('hex') === result[0].password) {
+                                        //console.log("passwords match!");
+        
+                                        res.setHeader('Content-Type', 'application/json');
+                                        res.status(200).json({ status: "success" });
+                                }
+                                else {
+                                        res.setHeader('Content-Type', 'application/json');
+                                        res.status(403).json({ status: "unauthorized" });
+                                }
+                        });
                 }
                 else{
                         res.setHeader('Content-Type', 'application/json');
@@ -409,51 +423,59 @@ app.post('/emailer', (req, res)=>{
                                 var postalCode = req.body.postalCode;
                                 var dateOfBirth = req.body.dateOfBirth;
                                 
-                                md5sum = crypto.createHash('md5');
-                                hash = md5sum.update(crypto.randomBytes(1)).digest('hex');
-                                var link = process.env.WEB_SITE + "/verify?hash=" + hash;
-                                var mailOptions = {
-                                        from: process.env.RV_EMAIL,
-                                        to: email,
-                                        subject: 'Please validate your Recycling Vision account',
-                                        text: "You're almost all set to start using the Recycling Vision app! To verify your account, please visit the following link within the next 24 hours: " + link
-                                }
-                        
-                                var sql = "INSERT INTO users (username, email, password, phoneNum, postalCode, dateOfBirth, hash, validationStatus) values (" +
-                                        pool.escape(username) + ", " + pool.escape(email) + ", " + pool.escape(password) + ", " + pool.escape(phoneNum) + ", " + pool.escape(postalCode)
-                                        + ", " + pool.escape(dateOfBirth) + ", " + pool.escape(hash) + ", 0)";
-                        
-                                var error = false;
-                        
-                                pool.query(sql, function (err, result, fields){
-                                        if (err) {
-                                                console.log("Error inserting into Users table");
-                                                error = true;
+                                var uniqueSalt = crypto.randomBytes(32).toString('hex');
+                                var hashedPassword;
+                                crypto.scrypt(password, uniqueSalt, 32, (error, derivedKey) => {
+                                        if(error) {
+                                                console.log("Encryption error");
                                         }
-                        
-                                        if(error !== true){
-                                                var insertedID = result.insertId;
-                                                var emailSql = "INSERT INTO validationemail (timestamp, userID, recoveryEmail) values (" +
-                                                pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) + ", " + pool.escape(insertedID) + ", 0)";
-                        
-                                                pool.query(emailSql, function (err, result, fields){
-                                                        if (err) {
-                                                                console.log("Error inserting into ValidationEmail table");
-                                                                res.status(400).sendStatus(400);
-                                                                return;
-                                                        }
-                                                        else{
-                                                                transporter.sendMail(mailOptions);
-                                                                res.setHeader('Content-Type', 'application/json');
-                                                                res.status(200).json({status:"success"});
-                                                                return;
-                                                        }
-                                                });
+                                        hashedPassword = derivedKey.toString('hex');
+                                        md5sum = crypto.createHash('md5');
+                                        hash = md5sum.update(crypto.randomBytes(1)).digest('hex');
+                                        var link = process.env.WEB_SITE + "/verify?hash=" + hash;
+                                        var mailOptions = {
+                                                from: process.env.RV_EMAIL,
+                                                to: email,
+                                                subject: 'Please validate your Recycling Vision account',
+                                                text: "You're almost all set to start using the Recycling Vision app! To verify your account, please visit the following link within the next 24 hours: " + link
                                         }
-                                        else{
-                                                res.status(400).sendStatus(400);
-                                        }
-                                });                
+                                
+                                        var sql = "INSERT INTO users (username, email, password, phoneNum, postalCode, dateOfBirth, hash, salt, validationStatus) values (" +
+                                                pool.escape(username) + ", " + pool.escape(email) + ", " + pool.escape(hashedPassword) + ", " + pool.escape(phoneNum) + ", " + 
+                                                pool.escape(postalCode) + ", " + pool.escape(dateOfBirth) + ", " + pool.escape(hash) + ", " + pool.escape(uniqueSalt) + ", 0)";
+
+                                        var error = false;
+                                
+                                        pool.query(sql, function (err, result, fields){
+                                                if (err) {
+                                                        console.log("Error inserting into Users table");
+                                                        error = true;
+                                                }
+                                
+                                                if(error !== true){
+                                                        var insertedID = result.insertId;
+                                                        var emailSql = "INSERT INTO validationemail (timestamp, userID, recoveryEmail) values (" +
+                                                        pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) + ", " + pool.escape(insertedID) + ", 0)";
+                                
+                                                        pool.query(emailSql, function (err, result, fields){
+                                                                if (err) {
+                                                                        console.log("Error inserting into ValidationEmail table");
+                                                                        res.status(400).sendStatus(400);
+                                                                        return;
+                                                                }
+                                                                else{
+                                                                        transporter.sendMail(mailOptions);
+                                                                        res.setHeader('Content-Type', 'application/json');
+                                                                        res.status(200).json({status:"success"});
+                                                                        return;
+                                                                }
+                                                        });
+                                                }
+                                                else{
+                                                        res.status(400).sendStatus(400);
+                                                }
+                                        });
+                                });                   
                         }
                 });
         }
