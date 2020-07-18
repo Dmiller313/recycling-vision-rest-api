@@ -389,7 +389,6 @@ app.post('/validationemail', (req, res)=>{
 app.post('/emailer', (req, res)=>{
 
 
-        var salt = crypto.randomBytes(32).toString("hex");
         var valid = true;
         var email = req.body.email;
         valid = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/.test(email);
@@ -407,6 +406,7 @@ app.post('/emailer', (req, res)=>{
                                         res.status(400).sendStatus(400)
                                         return;
                                 }
+                                var salt = crypto.randomBytes(32).toString("hex");
                                 crypto.scrypt(req.body.password, salt, 32, (err, derivedKey) => {
                                         if (err) throw err;
                                         var password = derivedKey.toString('hex');
