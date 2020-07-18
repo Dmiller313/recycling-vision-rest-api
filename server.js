@@ -387,10 +387,14 @@ app.post('/validationemail', (req, res)=>{
 /* EMAIL VALIDATION ROUTES */
 
 app.post('/emailer', (req, res)=>{
+
+
+        var salt = crypto.randomBytes(32).toString("hex");
         var valid = true;
         var email = req.body.email;
         valid = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/.test(email);
         if(valid === true){
+                
                 pool.query("SELECT username FROM users WHERE email = " + pool.escape(email), function (err, result, fields){
                         if (err) {
                                 console.log("User checking error");
@@ -403,11 +407,16 @@ app.post('/emailer', (req, res)=>{
                                         res.status(400).sendStatus(400)
                                         return;
                                 }
+                                crypto.scrypt(req.body.password, salt, 32, (err, derivedKey) => {
+                                        if (err) throw err;
+                                        var password = derivedKey.toString('hex');
+                                    });
                                 var username = req.body.username;
-                                var password = req.body.password;
+                                //var password = req.body.password;
                                 var phoneNum = req.body.phoneNum;
                                 var postalCode = req.body.postalCode;
                                 var dateOfBirth = req.body.dateOfBirth;
+                                
                                 
                                 md5sum = crypto.createHash('md5');
                                 hash = md5sum.update(crypto.randomBytes(1)).digest('hex');
@@ -418,10 +427,12 @@ app.post('/emailer', (req, res)=>{
                                         subject: 'Please validate your Recycling Vision account',
                                         text: "You're almost all set to start using the Recycling Vision app! To verify your account, please visit the following link within the next 24 hours: " + link
                                 }
+
+
                         
-                                var sql = "INSERT INTO users (username, email, password, phoneNum, postalCode, dateOfBirth, hash, validationStatus) values (" +
+                                var sql = "INSERT INTO users (username, email, password, phoneNum, postalCode, dateOfBirth, hash, salt, validationStatus) values (" +
                                         pool.escape(username) + ", " + pool.escape(email) + ", " + pool.escape(password) + ", " + pool.escape(phoneNum) + ", " + pool.escape(postalCode)
-                                        + ", " + pool.escape(dateOfBirth) + ", " + pool.escape(hash) + ", 0)";
+                                        + ", " + pool.escape(dateOfBirth) + ", " + pool.escape(hash) + ", "+ pool.escape(salt)+", 0)";
                         
                                 var error = false;
                         
