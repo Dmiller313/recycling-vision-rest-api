@@ -587,7 +587,7 @@ app.post('/accountrecovery', (req, res)=>{
         return; 
 }); 
 
-/* Password Reset routes */
+/* Password Reset route */
 app.post('/passwordreset', (req, res)=>{
         var sql = "SELECT password, salt FROM users WHERE email = " +
                 pool.escape(req.body.email) +
@@ -606,20 +606,28 @@ app.post('/passwordreset', (req, res)=>{
                                         console.log("Error hashing password:\n" + error);
                                 }
                                 if (derivedKey.toString('hex') === result[0].password) {
-                                        var email = req.body.email;
-                                        var md5sum = crypto.createHash('md5');
-                                        var hash = md5sum.update(crypto.randomBytes(1)).digest('hex');
-                                        var link = process.env.WEB_SITE + "/reset?hash=" + hash;
-                                        var mailOptions = {
-                                                from: process.env.RV_EMAIL,
-                                                to: email,
-                                                subject: 'Recycling Vision password reset',
-                                                text: "You have recently requested to reset your password for your Recycling Vision account. Clicking this link will allow you to reset it: " + link +
-                                                "\n\nIf you did not request a password reset, ignore this email. This password reset is only available for the next hour.\n\nThanks,\nRecycling Vision"
-                                        }
-                                        transporter.sendMail(mailOptions);
-                                        res.setHeader('Content-Type', 'application/json');
-                                        res.status(200).json({status:"success"});
+                                        var uniqueSalt = crypto.randomBytes(32).toString('hex');
+                                        crypto.scrypt(req.body.newPassword, uniqueSalt, 32, (error, newKey) =>{
+                                                if(error){
+                                                        console.log("Error hashing password:\n" + error);
+                                                }
+                                                var newPwSQL = "UPDATE users SET password = " + pool.escape(newKey) +
+                                                "WHERE email = " + pool.escape(req.body.email);
+                                                pool.query(newPwSQL, function(err, result, fields){
+                                                        if(err){
+                                                                console.log("Error updating password: " + err);
+                                                                res.setHeader('Content-Type', 'application/json');
+                                                                res.status(400).json({status:"error"});
+                                                                return;
+                                                        }
+                                                        else{
+                                                                res.setHeader('Content-Type', 'application/json');
+                                                                res.status(200).json({status:"success"});
+                                                        }
+                                                })
+                                        })
+                                        
+                                        
                                 }
                                 else {
                                         res.setHeader('Content-Type', 'application/json');
@@ -633,19 +641,6 @@ app.post('/passwordreset', (req, res)=>{
                 }
         })
 })
-
-app.get('/reset', (req, res)=>{
-        pool.query("SELECT * FROM password_reset WHERE hash = '" + req.query.hash + "'", function (err, result, fields){
-                if (err) res.send("This link is either expired or invalid");
-                res.sendFile(path.join(__dirname,"views/reset.html"))
-                return;
-        })
-});
-
-app.post('/reset', (req, res)=>{
-        
-})
-
 
 /********************************************************************/
 
