@@ -296,8 +296,6 @@ app.post('/login', (req, res)=>{
                                         console.log("Error hashing password:\n" + error);
                                 }
                                 if (derivedKey.toString('hex') === result[0].password) {
-                                        //console.log("passwords match!");
-        
                                         res.setHeader('Content-Type', 'application/json');
                                         res.status(200).json({ status: "success" });
                                 }
@@ -440,7 +438,8 @@ app.post('/emailer', (req, res)=>{
                                                 from: process.env.RV_EMAIL,
                                                 to: email,
                                                 subject: 'Please validate your Recycling Vision account',
-                                                text: "You're almost all set to start using the Recycling Vision app! To verify your account, please visit the following link within the next 24 hours: " + link
+                                                text: "You're almost all set to start using the Recycling Vision app! To verify your account, please visit the following link within the next 24 hours: " + link +
+                                                "\n\nThanks,\nRecycling Vision"
                                         }
                                 
                                         var sql = "INSERT INTO users (username, email, password, phoneNum, postalCode, dateOfBirth, hash, salt, validationStatus) values (" +
@@ -587,6 +586,66 @@ app.post('/accountrecovery', (req, res)=>{
         res.send("Account recovered! Please login with your new details."); 
         return; 
 }); 
+
+/* Password Reset routes */
+app.post('/passwordreset', (req, res)=>{
+        var sql = "SELECT password, salt FROM users WHERE email = " +
+                pool.escape(req.body.email) +
+                ";"
+        pool.query(sql, function (err, result, fields){
+                if (err) {
+                        console.log("Error retrieving from Users table");
+                        res.setHeader('Content-Type', 'application/json');
+                        res.status(400).json({status:"error"});
+                        return;
+                }
+                if(typeof result[0] !== 'undefined') {
+                        var databaseUserSalt = result[0].salt;
+                        crypto.scrypt(req.body.password, databaseUserSalt, 32, (error, derivedKey) => {
+                                if (error) {
+                                        console.log("Error hashing password:\n" + error);
+                                }
+                                if (derivedKey.toString('hex') === result[0].password) {
+                                        var email = req.body.email;
+                                        var md5sum = crypto.createHash('md5');
+                                        var hash = md5sum.update(crypto.randomBytes(1)).digest('hex');
+                                        var link = process.env.WEB_SITE + "/reset?hash=" + hash;
+                                        var mailOptions = {
+                                                from: process.env.RV_EMAIL,
+                                                to: email,
+                                                subject: 'Recycling Vision password reset',
+                                                text: "You have recently requested to reset your password for your Recycling Vision account. Clicking this link will allow you to reset it: " + link +
+                                                "\n\nIf you did not request a password reset, ignore this email. This password reset is only available for the next hour.\n\nThanks,\nRecycling Vision"
+                                        }
+                                        transporter.sendMail(mailOptions);
+                                        res.setHeader('Content-Type', 'application/json');
+                                        res.status(200).json({status:"success"});
+                                }
+                                else {
+                                        res.setHeader('Content-Type', 'application/json');
+                                        res.status(403).json({ status: "unauthorized" });
+                                }
+                        });
+                }
+                else{
+                        res.setHeader('Content-Type', 'application/json');
+                        res.status(403).json({status:"unauthorized"});
+                }
+        })
+})
+
+app.get('/reset', (req, res)=>{
+        pool.query("SELECT * FROM password_reset WHERE hash = '" + req.query.hash + "'", function (err, result, fields){
+                if (err) res.send("This link is either expired or invalid");
+                res.sendFile(path.join(__dirname,"views/reset.html"))
+                return;
+        })
+});
+
+app.post('/reset', (req, res)=>{
+        
+})
+
 
 /********************************************************************/
 
