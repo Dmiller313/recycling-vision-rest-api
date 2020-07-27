@@ -96,7 +96,9 @@ app.get('/item/single', (req, res)=>{
                         console.log("Error retrieving Item");
                         res.status(400).json({status:"error",data:""});
                 }
-                res.status(200).json({status:"success",data:result[0].instruction});
+                if(typeof result[0] !== 'undefined') {
+                        res.status(200).json({status:"success",data:result[0].instruction});
+                }
         })
 })
 
