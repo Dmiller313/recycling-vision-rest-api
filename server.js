@@ -90,6 +90,16 @@ app.get('/item', (req, res)=>{
         })
 });
 
+app.get('/item/single', (req, res)=>{
+        pool.query("SELECT instruction FROM item WHERE itemName = " + pool.escape(req.body.itemName), function (err, result, fields){
+                if (err) {
+                        console.log("Error retrieving Item");
+                        res.status(400).json({status:"error",data:""});
+                }
+                res.status(200).json({status:"success",data:result[0].instruction});
+        })
+})
+
 app.post('/item', (req, res)=>{
         var sql = "INSERT INTO item (itemName) values ";
         for(item in req.body){
@@ -399,8 +409,6 @@ app.post('/validationemail', (req, res)=>{
 /* EMAIL VALIDATION ROUTES */
 
 app.post('/emailer', (req, res)=>{
-
-
         var valid = true;
         var email = req.body.email;
         valid = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/.test(email);
