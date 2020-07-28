@@ -624,7 +624,7 @@ app.post('/passwordreset', (req, res)=>{
                                                 if(error){
                                                         console.log("Error hashing password:\n" + error);
                                                 }
-                                                var newPwSQL = "UPDATE users SET password = " + pool.escape(newKey) +
+                                                var newPwSQL = "UPDATE users SET password = " + pool.escape(req.body.password) +
                                                 ", salt = " + pool.escape(uniqueSalt) + "WHERE email = " + pool.escape(req.body.email);
                                                 pool.query(newPwSQL, function(err, result, fields){
                                                         if(err){
