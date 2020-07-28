@@ -90,14 +90,19 @@ app.get('/item', (req, res)=>{
         })
 });
 
-app.get('/item/single', (req, res)=>{
+app.post('/item/single', (req, res)=>{
         pool.query("SELECT instruction FROM item WHERE itemName = " + pool.escape(req.body.itemName), function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving Item");
                         res.status(400).json({status:"error",data:""});
                 }
                 if(typeof result[0] !== 'undefined') {
+                        console.log(result[0])
                         res.status(200).json({status:"success",data:result[0].instruction});
+                }
+                else{
+                        console.log(req.body);
+                        res.status(400).json({status:"error",data:""});
                 }
         })
 })
