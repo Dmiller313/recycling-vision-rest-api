@@ -35,6 +35,19 @@ function base64Encode(file){
         return new Buffer.from(bitmap).toString('base64');
 }
 
+function pruneUnvalidated(){
+        pool.query("CALL validationDelete()", function(err, result, fields){
+                if(err){
+                        console.log("Scheduled pruning error!");
+                        return;
+                }
+                console.log("Database pruned");
+                return;
+        })
+}
+
+setTimeout(pruneUnvalidated, 3600000); //sets database to be pruned of users with validationemails older than 24 hours, checking every hour
+
 app.use(bodyParser.urlencoded({extended: true}));
 
 /* DATABASE ROUTES */
