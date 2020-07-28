@@ -97,11 +97,9 @@ app.post('/item/single', (req, res)=>{
                         res.status(400).json({status:"error",data:""});
                 }
                 if(typeof result[0] !== 'undefined') {
-                        console.log(result[0])
                         res.status(200).json({status:"success",data:result[0].instruction});
                 }
                 else{
-                        console.log(req.body);
                         res.status(400).json({status:"error",data:""});
                 }
         })
