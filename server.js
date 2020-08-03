@@ -617,13 +617,13 @@ app.post('/accountrecovery', (req, res)=>{
 
 /* Password Reset route */
 app.post('/passwordreset', (req, res)=>{
+        res.setHeader('Content-Type', 'application/json');
         var sql = "SELECT password, salt FROM users WHERE email = " +
                 pool.escape(req.body.email) +
                 ";"
         pool.query(sql, function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving from Users table");
-                        res.setHeader('Content-Type', 'application/json');
                         res.status(400).json({status:"error"});
                         return;
                 }
@@ -632,24 +632,24 @@ app.post('/passwordreset', (req, res)=>{
                         crypto.scrypt(req.body.password, databaseUserSalt, 32, (error, derivedKey) => {
                                 if (error) {
                                         console.log("Error hashing password:\n" + error);
+                                        res.status(400).json({status:"error"});
                                 }
                                 if (derivedKey.toString('hex') === result[0].password) {
                                         var uniqueSalt = crypto.randomBytes(32).toString('hex');
                                         crypto.scrypt(req.body.newPassword, uniqueSalt, 32, (error, newKey) =>{
                                                 if(error){
                                                         console.log("Error hashing password:\n" + error);
+                                                        res.status(400).json({status:"error"});
                                                 }
                                                 var newPwSQL = "UPDATE users SET password = " + pool.escape(newKey.toString('hex')) +
                                                 ", salt = " + pool.escape(uniqueSalt) + "WHERE email = " + pool.escape(req.body.email);
                                                 pool.query(newPwSQL, function(err, result, fields){
                                                         if(err){
                                                                 console.log("Error updating password: " + err);
-                                                                res.setHeader('Content-Type', 'application/json');
                                                                 res.status(400).json({status:"error"});
                                                                 return;
                                                         }
                                                         else{
-                                                                res.setHeader('Content-Type', 'application/json');
                                                                 res.status(200).json({status:"success"});
                                                         }
                                                 })
@@ -658,13 +658,11 @@ app.post('/passwordreset', (req, res)=>{
                                         
                                 }
                                 else {
-                                        res.setHeader('Content-Type', 'application/json');
                                         res.status(403).json({ status: "unauthorized" });
                                 }
                         });
                 }
                 else{
-                        res.setHeader('Content-Type', 'application/json');
                         res.status(403).json({status:"unauthorized"});
                 }
         })
