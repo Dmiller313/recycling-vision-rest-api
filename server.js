@@ -307,13 +307,13 @@ app.get('/users', (req, res)=>{
 */
 
 app.post('/login', (req, res)=>{
-        var sql = "SELECT password, salt FROM users WHERE email = " +
+        res.setHeader('Content-Type', 'application/json');
+        var sql = "SELECT password, salt, validationStatus FROM users WHERE email = " +
                 pool.escape(req.body.email) +
                 ";"
         pool.query(sql, function (err, result, fields){
                 if (err) {
                         console.log("Error retrieving from Users table");
-                        res.setHeader('Content-Type', 'application/json');
                         res.status(400).json({status:"error"});
                         return;
                 }
@@ -324,17 +324,19 @@ app.post('/login', (req, res)=>{
                                         console.log("Error hashing password:\n" + error);
                                 }
                                 if (derivedKey.toString('hex') === result[0].password) {
-                                        res.setHeader('Content-Type', 'application/json');
-                                        res.status(200).json({ status: "success" });
+                                        if(result[0].validationStatus == 0){
+                                                res.status(200).json({ status: "success" });
+                                        }
+                                        else{
+                                                res.status(200).json({status:"validate"});
+                                        }
                                 }
                                 else {
-                                        res.setHeader('Content-Type', 'application/json');
                                         res.status(403).json({ status: "unauthorized" });
                                 }
                         });
                 }
                 else{
-                        res.setHeader('Content-Type', 'application/json');
                         res.status(403).json({status:"unauthorized"});
                 }
         })
