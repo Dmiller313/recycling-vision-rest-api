@@ -307,8 +307,8 @@ app.get('/users', (req, res)=>{
 */
 
 app.post('/login', (req, res)=>{
-        var sql = "SELECT password, salt FROM users WHERE username = " +
-                pool.escape(req.body.username) +
+        var sql = "SELECT password, salt FROM users WHERE email = " +
+                pool.escape(req.body.email) +
                 ";"
         pool.query(sql, function (err, result, fields){
                 if (err) {
