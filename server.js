@@ -324,7 +324,7 @@ app.post('/login', (req, res)=>{
                                         console.log("Error hashing password:\n" + error);
                                 }
                                 if (derivedKey.toString('hex') === result[0].password) {
-                                        if(result[0].validationStatus == 0){
+                                        if(result[0].validationStatus == 1){
                                                 res.status(200).json({ status: "success" });
                                         }
                                         else{
