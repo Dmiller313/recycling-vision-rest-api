@@ -572,14 +572,14 @@ app.post('/recoveryemailer', (req, res)=>{
 app.get('/accountrecovery', (req, res)=> { 
         pool.query("SELECT userID FROM users WHERE hash = '" + req.query.hash + "'", function (err, result, fields){
                 if (err) {
-                        res.send("This link is either expired or invalid");
+                        res.send("This link is either expired or Invalid");
                         console.log(err);
                 }
                 if(result[0] != undefined){
                         var userID = result[0].userID;
                         pool.query("UPDATE validationemail SET recoveryemail = 0 WHERE userID = " + pool.escape(userID), function(err, result, fields){
                                 if(err){
-                                        res.send("This link is either expired or invalid");
+                                        res.send("This Link is either expired or invalid");
                                         console.log(err);
                                 } 
                                 else{
@@ -612,7 +612,7 @@ app.get('/accountrecovery', (req, res)=> {
                         })  
                 }
                 else{
-                        res.send("This link is either expired or invalid");
+                        res.send("An error has occurred");
                 }
         });
 }); 
