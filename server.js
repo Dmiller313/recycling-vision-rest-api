@@ -8,6 +8,7 @@ const datetime = require('node-datetime');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const bodyParser = require('body-parser');
+const generator = require('generate-password');
 
 var pool = mysql.createPool({
 	host: process.env.DB_HOST, 
@@ -44,6 +45,14 @@ function pruneUnvalidated(){
                 console.log("Database pruned");
                 return;
         })
+        pool.query("CALL recoveryUpdate()", function(err, result, fields){
+                if(err){
+                        console.log("Scheduled pruning error!");
+                        return;
+                }
+                console.log("Database pruned");
+                return;
+        })
 }
 
 setTimeout(pruneUnvalidated, 3600000); //sets database to be pruned of users with validationemails older than 24 hours, checking every hour
@@ -66,11 +75,6 @@ app.get('/dataset', (req, res)=>{
 });
 
 app.post('/dataset', (req, res)=>{
-        //This route will require knowledge of the Item to which it's linked
-        //Necessary info in the request: itemID (or name, which can then perform a GET to /item to tell which itemID to use),
-        //image to upload: filename? already-translated base64 string?
-        //Possible TODO: configure route to be able to handle either file (will contain a period) or base64 string (will not contain a period) - could be handy for Keras
-
         var sql = "INSERT INTO dataset (itemID, image) values ";
         for(item in req.body){
                 sql += '(' + 
@@ -293,19 +297,6 @@ app.post('/recyclingmessage', (req, res)=>{
         return;
 })
 
-/*
-app.get('/users', (req, res)=>{
-        pool.query("SELECT * FROM users", function (err, result, fields){
-                if (err) {
-                        console.log("Error retrieving from Users table");
-                        res.redirect("/failure");
-                        return;
-                }
-                res.send(result);
-        })
-});
-*/
-
 app.post('/login', (req, res)=>{
         res.setHeader('Content-Type', 'application/json');
         var sql = "SELECT password, salt, validationStatus FROM users WHERE email = " +
@@ -326,6 +317,9 @@ app.post('/login', (req, res)=>{
                                 if (derivedKey.toString('hex') === result[0].password) {
                                         if(result[0].validationStatus == 1){
                                                 res.status(200).json({ status: "success" });
+                                        }
+                                        else if(result[0].validationStatus == 2){
+                                                res.status(200).json({ status: "recover" });
                                         }
                                         else{
                                                 res.status(200).json({status:"validate"});
@@ -364,35 +358,6 @@ app.get('/exists', (req, res) =>{
         });
 })
 
-//TODO: may need password protection, ALL fields here need sql injection protection
-/*app.post('/users', (req, res)=>{
-        var sql = "INSERT INTO users (username, email, password, phoneNum, postalCode, dateOfBirth) values "//, validationStatus) values ";
-        for(item in req.body){ 
-                sql += '(' + 
-                pool.escape(req.body[item].username.toString()) +
-                ', ' +
-                pool.escape(req.body[item].email.toString()) +
-                ', ' +
-                pool.escape(req.body[item].password.toString()) +
-                ', ' +
-                pool.escape(req.body[item].phoneNum.toString()) +
-                ', ' +
-                pool.escape(req.body[item].postalCode.toString()) +
-                ', ' +
-                pool.escape(req.body[item].dateOfBirth.toString()) +
-                //', ' +
-                //pool.escape(req.body[item].validationStatus.toString()) + 
-                '), ';
-        }
-        sql = sql.substring(0, sql.length - 2);
-        pool.query(sql, function (err, result, fields){
-                if (err) console.log("Error inserting into Users table");
-                //res.send(result);
-                res.redirect("/success");
-        })
-        return;
-})*/
-
 app.get('/validationemail', (req, res)=>{
         pool.query("SELECT * FROM validationemail", function (err, result, fields){
                 if (err) {
@@ -429,6 +394,7 @@ app.post('/validationemail', (req, res)=>{
 /* EMAIL VALIDATION ROUTES */
 
 app.post('/emailer', (req, res)=>{
+        res.setHeader('Content-Type', 'application/json');
         var valid = true;
         var email = req.body.email;
         valid = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/.test(email);
@@ -495,7 +461,6 @@ app.post('/emailer', (req, res)=>{
                                                                 }
                                                                 else{
                                                                         transporter.sendMail(mailOptions);
-                                                                        res.setHeader('Content-Type', 'application/json');
                                                                         res.status(200).json({status:"success"});
                                                                         return;
                                                                 }
@@ -526,93 +491,121 @@ app.get('/verify', (req, res)=>{
                 });
                 res.send("Account verified!");
                 return;
-        })
+        });
 });
 
 /* Account Recovery Routes */
 
-app.get('/recover', (req, res)=>{ 
-        //query for user by email 
-        //TODO: select from validationemail table, only select rows with the 'recovery' flag set to 1 
-        pool.query("SELECT * FROM recoveryemail", function (err, result, fields){ 
-                if (err) { 
-                        console.log("Error retrieving from RecoveryEmail table"); 
-                        res.redirect("/failure");
-                        return;
-                } 
-                res.send(result); 
-        }) 
-});
-
-app.post('/recover', (req, res)=>{ 
-        //create and send a recovery email 
-        //TODO: insert into validationemail table, insert row with the 'recovery' flag set to 1 
-        var sql = "INSERT INTO recoveryemail (timestamp, userID) values "; 
-        for(item in req.body){  
-                sql += '(' +  
-                pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) + 
-                ', ' + 
-                pool.escape(req.body[item].userID.toString()) + 
-                '), '; 
-        } 
-        sql = sql.substring(0, sql.length - 2); 
-        pool.query(sql, function (err, result, fields){ 
-                if (err) { 
-                        console.log("Error inserting into RecoveryEmail table"); 
-                        res.redirect("/failure");
-                        return;
-                } 
-                res.redirect("/success"); 
-        }) 
-        return; 
-}); 
-
 app.post('/recoveryemailer', (req, res)=>{ 
+        res.setHeader('Content-Type', 'application/json');
         var valid = true; 
         var email = req.body.email; 
         valid = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/.test(email);                
 
         if(valid){ 
-
-                md5sum = crypto.createHash('md5'); 
-                hash = md5sum.update(crypto.randomBytes(1)).digest('hex'); 
-                var link = process.env.WEB_SITE + "/verify?hash=" + hash; 
-                var mailOptions = { 
-                        from: process.env.RV_EMAIL, 
-                        to: email, 
-                        subject: 'Recover your Recycling Vision account', 
-                        text: "A request to recover your Recycling Vision account has been created. Please visit the following link within 24 hours to recover your account: " + link 
-                } 
-                transporter.sendMail(mailOptions); 
-                res.redirect("/success"); 
+                //Check if email exists
+                var sql = "SELECT userID FROM users WHERE email = " + pool.escape(email) + " AND validationStatus = 1;";
+                pool.query(sql, function(err, results, fields){
+                        if(err){
+                                console.log("Error accessing db");
+                                res.status(400).json({status:"error"});
+                        }
+                        if(results[0] != undefined){
+                                var userID = results[0].userID;
+                                var recoveryStatusSql = "SELECT recoveryEmail FROM validationemail where userID = " + pool.escape(userID);
+                                pool.query(recoveryStatusSql, function(err, results, fields){
+                                        if(err){
+                                                console.log("sql error");
+                                                res.status(400).json({status:"error"});
+                                        }
+                                        else if(results[0].recoveryEmail == 0){
+                                                var veSql = "UPDATE validationemail SET recoveryemail = 1, timestamp = " + pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) +
+                                                "WHERE userID = " + pool.escape(userID) + ";";
+                                                pool.query(veSql, function(err, results, fields){
+                                                        if(err){
+                                                                console.log("Error");
+                                                                res.status(400).json({status:"error"});
+                                                        }
+                                                        else{
+                                                                md5sum = crypto.createHash('md5'); 
+                                                                hash = md5sum.update(crypto.randomBytes(1)).digest('hex'); 
+                                                                var link = process.env.WEB_SITE + "/accountrecovery?hash=" + hash; 
+                                                                var mailOptions = { 
+                                                                        from: process.env.RV_EMAIL, 
+                                                                        to: email, 
+                                                                        subject: 'Recover your Recycling Vision account', 
+                                                                        text: "A request to recover your Recycling Vision account has been created. Please visit the following link within 24 hours to recover your account: " + link 
+                                                                } 
+                                                                //Update user's "hash" column
+                                                                var userSql = "UPDATE users SET hash = " + pool.escape(hash) + ", validationStatus = 2 WHERE userID = " + pool.escape(userID) + ";"
+                                                                pool.query(userSql, function(err, results, fields){
+                                                                        if(err){
+                                                                                console.log("Error updating users");
+                                                                                console.log(err);
+                                                                                res.status(400).json({status:"error"});
+                                                                        }
+                                                                        else{
+                                                                                transporter.sendMail(mailOptions);
+                                                                                res.status(200).json({status:"success"});
+                                                                        }
+                                                                });
+                                                        }  
+                                                })
+                                        }
+                                        else{
+                                                console.log("Already recovering");
+                                                res.status(400).json({status:"error"});
+                                        }
+                                })
+                        }
+                        else{
+                                res.status(400).json({status:"error"})
+                        }
+                });
         } 
         else{ 
-                console.log("An error has occurred"); 
+                console.log("An error has occurred");
+                res.status(400).json({status:"error"})
         } 
 }); 
 
 app.get('/accountrecovery', (req, res)=> { 
-        //TODO: modify query to support validationemail recovery flag 
-        pool.query("SELECT * FROM users WHERE hash = " + pool.escape(req.query.hash), function (err, result, fields){ 
-                if (err) {
-                        res.send("This recovery link is either expired or invalid");
-                        return;
+        pool.query("SELECT userID FROM users WHERE hash = '" + req.query.hash + "'", function (err, result, fields){
+                if (err) res.send("This link is either expired or invalid");
+                if(result[0] != undefined){
+                        var userID = result[0].userID;
+                        pool.query("UPDATE validationemail SET recoveryemail = 0 WHERE userID = " + pool.escape(userID), function(err, result, fields){
+                                if(err) res.send("This link is either expired or invalid");
+                                var newPassword = generator.generate({
+                                        length: 16,
+                                        numbers: true,
+                                        symbols: true,
+                                        excludeSimilarCharacters: true,
+                                        exclude: "[]()<>/\\;{}\'\"%~`"
+                                });
+                                var uniqueSalt = crypto.randomBytes(32).toString('hex');
+                                var hashedPassword;
+                                crypto.scrypt(newPassword, uniqueSalt, 32, (error, derivedKey) => {
+                                        if(error) {
+                                                console.log("Encryption error");
+                                        }
+                                        hashedPassword = derivedKey.toString('hex');
+                                        pool.query("UPDATE users SET hash = null, validationStatus = 1, password = " + pool.escape(hashedPassword) +" WHERE userID = " 
+                                        + pool.escape(userID), function (err, result, fields){
+                                                if(err) {
+                                                        console.log("Error updating user");
+                                                        return;
+                                                }
+                                                res.send("Account recovered! Your new password is: " + newPassword + " - this new password can be changed to one of your preference from within the Recycling Vision app");
+                                                return;
+                                        });
+                                });
+                        })  
                 }
-                res.send("Please enter new password for account recovery/");//TODO: serve the account recovery page once it is written 
-        }) 
-}); 
-
-app.post('/accountrecovery', (req, res)=>{ 
-        //update the user's password in the db 
-        //TODO:  
-        pool.query("UPDATE users SET password = " + pool.escape(req.query.password) + "WHERE userID = " + pool.escape(req.query.userID), function (err, result, fields){ 
-                if(err) { 
-                        console.log("Error updating user"); 
-                        return; 
-                } 
-        }); 
-        res.send("Account recovered! Please login with your new details."); 
-        return; 
+                else{
+                        res.send("This link is either expired or invalid");
+                }
+        });
 }); 
 
 /* Password Reset route */
@@ -653,9 +646,7 @@ app.post('/passwordreset', (req, res)=>{
                                                                 res.status(200).json({status:"success"});
                                                         }
                                                 })
-                                        })
-                                        
-                                        
+                                        }) 
                                 }
                                 else {
                                         res.status(403).json({ status: "unauthorized" });
