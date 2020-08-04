@@ -575,7 +575,7 @@ app.get('/accountrecovery', (req, res)=> {
                         res.send("This link is either expired or Invalid");
                         console.log(err);
                 }
-                if(result[0] != undefined){
+                else if(result[0] != undefined){
                         var userID = result[0].userID;
                         pool.query("UPDATE validationemail SET recoveryemail = 0 WHERE userID = " + pool.escape(userID), function(err, result, fields){
                                 if(err){
@@ -596,17 +596,21 @@ app.get('/accountrecovery', (req, res)=> {
                                                 if(error) {
                                                         console.log("Encryption error");
                                                 }
-                                                hashedPassword = derivedKey.toString('hex');
-                                                pool.query("UPDATE users SET hash = null, validationStatus = 1, password = " + pool.escape(hashedPassword) + 
-                                                ", salt = " + pool.escape(uniqueSalt) + " WHERE userID = " 
-                                                + pool.escape(userID), function (err, result, fields){
-                                                        if(err) {
-                                                                console.log("Error updating user");
-                                                                return;
-                                                        }
-                                                        res.send("Account recovered! Your new password is: " + newPassword + " - this new password can be changed to one of your preference from within the Recycling Vision app");
-                                                        return;
-                                                });
+                                                else{
+                                                        hashedPassword = derivedKey.toString('hex');
+                                                        pool.query("UPDATE users SET hash = null, validationStatus = 1, password = " + pool.escape(hashedPassword) + 
+                                                        ", salt = " + pool.escape(uniqueSalt) + " WHERE userID = " 
+                                                        + pool.escape(userID), function (err, result, fields){
+                                                                if(err) {
+                                                                        console.log("Error updating user");
+                                                                        return;
+                                                                }
+                                                                else{
+                                                                        res.send("Account recovered! Your new password is: " + newPassword + " - this new password can be changed to one of your preference from within the Recycling Vision app");
+                                                                        return;
+                                                                }
+                                                        });
+                                                }
                                         });
                                 }  
                         })  
