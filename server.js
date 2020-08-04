@@ -575,32 +575,37 @@ app.get('/accountrecovery', (req, res)=> {
                 if(result[0] != undefined){
                         var userID = result[0].userID;
                         pool.query("UPDATE validationemail SET recoveryemail = 0 WHERE userID = " + pool.escape(userID), function(err, result, fields){
-                                if(err) res.send("This link is either expired or invalid");
-                                var newPassword = generator.generate({
-                                        length: 16,
-                                        numbers: true,
-                                        symbols: true,
-                                        excludeSimilarCharacters: true,
-                                        exclude: "[]()<>/\\;{}\'\"%~`"
-                                });
-                                var uniqueSalt = crypto.randomBytes(32).toString('hex');
-                                var hashedPassword;
-                                crypto.scrypt(newPassword, uniqueSalt, 32, (error, derivedKey) => {
-                                        if(error) {
-                                                console.log("Encryption error");
-                                        }
-                                        hashedPassword = derivedKey.toString('hex');
-                                        pool.query("UPDATE users SET hash = null, validationStatus = 1, password = " + pool.escape(hashedPassword) + 
-                                        ", salt = " + pool.escape(uniqueSalt) + " WHERE userID = " 
-                                        + pool.escape(userID), function (err, result, fields){
-                                                if(err) {
-                                                        console.log("Error updating user");
-                                                        return;
-                                                }
-                                                res.send("Account recovered! Your new password is: " + newPassword + " - this new password can be changed to one of your preference from within the Recycling Vision app");
-                                                return;
+                                if(err){
+                                        res.send("This link is either expired or invalid");
+                                        console.log(err);
+                                } 
+                                else{
+                                        var newPassword = generator.generate({
+                                                length: 16,
+                                                numbers: true,
+                                                symbols: true,
+                                                excludeSimilarCharacters: true,
+                                                exclude: "[]()<>/\\;{}\'\"%~`"
                                         });
-                                });
+                                        var uniqueSalt = crypto.randomBytes(32).toString('hex');
+                                        var hashedPassword;
+                                        crypto.scrypt(newPassword, uniqueSalt, 32, (error, derivedKey) => {
+                                                if(error) {
+                                                        console.log("Encryption error");
+                                                }
+                                                hashedPassword = derivedKey.toString('hex');
+                                                pool.query("UPDATE users SET hash = null, validationStatus = 1, password = " + pool.escape(hashedPassword) + 
+                                                ", salt = " + pool.escape(uniqueSalt) + " WHERE userID = " 
+                                                + pool.escape(userID), function (err, result, fields){
+                                                        if(err) {
+                                                                console.log("Error updating user");
+                                                                return;
+                                                        }
+                                                        res.send("Account recovered! Your new password is: " + newPassword + " - this new password can be changed to one of your preference from within the Recycling Vision app");
+                                                        return;
+                                                });
+                                        });
+                                }  
                         })  
                 }
                 else{
