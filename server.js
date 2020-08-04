@@ -8,7 +8,7 @@ const datetime = require('node-datetime');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const bodyParser = require('body-parser');
-const generator = require('generate-password');
+const { body, validationResult } = require('express-validator');
 
 var pool = mysql.createPool({
 	host: process.env.DB_HOST, 
@@ -575,7 +575,13 @@ app.get('/accountrecovery', (req, res)=> {
                         res.send("This link is either expired or Invalid");
                         console.log(err);
                 }
-                else if(result[0] != undefined){
+                if(result[0] != undefined){
+                        res.sendFile(path.join(__dirname, "/views/recovery.html"));
+                }
+                else{
+                        res.send("This link is either expired or Invalid");
+                }
+                /*if(result[0] != undefined){
                         var userID = result[0].userID;
                         pool.query("UPDATE validationemail SET recoveryemail = 0 WHERE userID = " + pool.escape(userID), function(err, result, fields){
                                 if(err){
@@ -583,13 +589,6 @@ app.get('/accountrecovery', (req, res)=> {
                                         console.log(err);
                                 } 
                                 else{
-                                        var newPassword = generator.generate({
-                                                length: 16,
-                                                numbers: true,
-                                                symbols: true,
-                                                excludeSimilarCharacters: true,
-                                                exclude: "[]()<>/\\;{}\'\"%~`"
-                                        });
                                         var uniqueSalt = crypto.randomBytes(32).toString('hex');
                                         var hashedPassword;
                                         crypto.scrypt(newPassword, uniqueSalt, 32, (error, derivedKey) => {
@@ -617,9 +616,74 @@ app.get('/accountrecovery', (req, res)=> {
                 }
                 else{
                         res.send("An error has occurred");
-                }
+                }*/
         });
 }); 
+
+app.post('/accountrecovery', [
+        body('hash').isLength({min: 32, max: 32}),
+        body('password').isLength({min: 8, max:32})
+], (req, res)=> { 
+        var newPassword = req.body.password;
+        var hash = req.body.hash;
+        var validPass = newPassword.match(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!*@#$%^&+=])(?=\S+$).{8,}$/);
+        if(validPass != null){
+                validPass = true;
+        }
+        else{
+                validPass = false;
+        }
+        var validHash;
+        if(req.body.hash.length != 32){
+                validHash = false;
+        }
+        else{
+                validHash = true;
+        }
+        if(validPass && validHash){
+                pool.query("SELECT userID FROM users WHERE hash = '" + hash + "'", function (err, result, fields){
+                        if(result[0] != undefined){
+                                var userID = result[0].userID;
+                                pool.query("UPDATE validationemail SET recoveryemail = 0 WHERE userID = " + pool.escape(userID), function(err, result, fields){
+                                        if(err){
+                                                res.send("This Link is either expired or invalid");
+                                                console.log(err);
+                                        } 
+                                        else{
+                                                var uniqueSalt = crypto.randomBytes(32).toString('hex');
+                                                var hashedPassword;
+                                                crypto.scrypt(newPassword, uniqueSalt, 32, (error, derivedKey) => {
+                                                        if(error) {
+                                                                console.log("Encryption error");
+                                                        }
+                                                        else{
+                                                                hashedPassword = derivedKey.toString('hex');
+                                                                pool.query("UPDATE users SET hash = null, validationStatus = 1, password = " + pool.escape(hashedPassword) + 
+                                                                ", salt = " + pool.escape(uniqueSalt) + " WHERE userID = " 
+                                                                + pool.escape(userID), function (err, result, fields){
+                                                                        if(err) {
+                                                                                console.log("Error updating user");
+                                                                                return;
+                                                                        }
+                                                                        else{
+                                                                                res.send("Account recovered!");
+                                                                                return;
+                                                                        }
+                                                                });
+                                                        }
+                                                });
+                                        }  
+                                })  
+                        }
+                        else{
+                                res.send("An error has occurred");
+                        }
+                });
+        }
+        else{
+                res.send("An error has occurred");
+        }
+});
 
 /* Password Reset route */
 app.post('/passwordreset', (req, res)=>{

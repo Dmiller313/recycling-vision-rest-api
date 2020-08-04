@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <title>Account Recovery</title>
+    </head>
+    <body>
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <div class="col-md-12">
+                    <div class="navbar-header">
+                        <span class="navbar-brand">Recycling Vision</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div>
+            <form method="post" action="/accountrecovery">
+                <input hidden id="hash" name="hash" type="hidden" required />
+                <fieldset>
+                    <legend>Account Recovery</legend>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="password">Password (include lower case letter, upper case letter, number and a symbol; must be more than 8 characters):</label>
+                                <input class="form-control" maxlength="32" id="password" name="password" type="password" required pattern="^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!*@#$%^&+=])(?=\S+$).{8,}$" />
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+                <br />
+                <input type="submit" class="btn btn-primary pull-right" value="Update Password" />
+            </form>
+        </div>
+        <!-- Latest compiled and minified jQuery 3.2.1 JavaScript -->
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="crossorigin="anonymous"></script>
+
+        <!-- Latest compiled and minified Bootstrap 3.3.7 JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+        
+        <script type="text/javascript">
+            
+            var urlParams = new URLSearchParams(window.location.search);
+            document.getElementById("hash").setAttribute('value',urlParams.get('hash'));
+        </script>
+
+    </body>
+</html>
