@@ -590,7 +590,8 @@ app.get('/accountrecovery', (req, res)=> {
                                                 console.log("Encryption error");
                                         }
                                         hashedPassword = derivedKey.toString('hex');
-                                        pool.query("UPDATE users SET hash = null, validationStatus = 1, password = " + pool.escape(hashedPassword) +" WHERE userID = " 
+                                        pool.query("UPDATE users SET hash = null, validationStatus = 1, password = " + pool.escape(hashedPassword) + 
+                                        ", salt = " + pool.escape(uniqueSalt) + " WHERE userID = " 
                                         + pool.escape(userID), function (err, result, fields){
                                                 if(err) {
                                                         console.log("Error updating user");
