@@ -1,0 +1,7 @@
+{
+	"objectName":<returned name from match found>,
+	"probabilityMatch":<returned probability>,
+	"objectImage":<look into base64 encoding the image in-app, rather than on the server?>,
+	"foundRecyclingInstruction":<returned instruction for item>
+	"userID":<user's ID, somehow>
+}

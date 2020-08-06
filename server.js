@@ -141,7 +141,7 @@ app.post('/item', (req, res)=>{
         })
         return;
 })
-
+/*
 app.get('/identifiedobject', (req, res)=>{
         pool.query("SELECT * FROM identifiedobject", function (err, result, fields){
                 if (err) {
@@ -176,7 +176,8 @@ app.post('/identifiedobject', (req, res)=>{
         })
         return;
 })
-
+*/
+/*
 app.get('/imagepack', (req, res)=>{
         pool.query("SELECT * FROM imagepack", function (err, result, fields){
                 if (err) {
@@ -207,41 +208,56 @@ app.post('/imagepack', (req, res)=>{
         })
         return;
 })
+*/
 
 app.get('/matchhistoryitem', (req, res)=>{
-        pool.query("SELECT * FROM matchhistoryitem", function (err, result, fields){
+        pool.query("SELECT * FROM matchhistoryitem m, identifiedobject i WHERE m.objectID = i.objectID AND m.userID = " + pool.escape(req.body.userID), 
+        function (err, result, fields){
                 if (err) {
-                        console.log("Error retrieving from MatchHistoryItem table");
-                        res.redirect("/failure");
-                        return;
+                        res.status(400).json({historyItemID:0}); //represents invalid history item, error
                 }
-                res.send(result);
+                else{
+                        res.status(200).send(result); //will send empty json when no results found
+                }
         })
 });
 
 app.post('/matchhistoryitem', (req, res)=>{
-        var sql = "INSERT INTO matchhistoryitem (objectID, foundRecyclingInstruction, userID, matchDateTime) values ";
-        for(item in req.body){ 
-                sql += '(' + 
-                pool.escape(req.body[item].objectID.toString()) +
-                ', ' +
-                pool.escape(req.body[item].foundRecyclingInstruction.toString()) +
-                ', ' +
-                pool.escape(req.body[item].userID.toString()) +
-                ', ' +
-                pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) +
-                '), ';
-        }
-        sql = sql.substring(0, sql.length - 2);
-        pool.query(sql, function (err, result, fields){
-                if (err) {
-                        console.log("Error inserting into MatchHistoryItem table");
-                        res.redirect("/failure");
-                        return;
+        var objSql = "INSERT INTO identifiedObject (objectName, probabilityMatch, objectImage) values ";
+        objSql += '(' + 
+        pool.escape(req.body.objectName.toString()) +
+        ', ' +
+        pool.escape(req.body.probabilityMatch.toString()) +
+        ', ' +
+        pool.escape(req.body.objectImage) +
+        ');';
+        
+        pool.query(objSql, function (err, result, fields){
+                if(err){
+                        res.status(400).json({status:"Match History could not be saved"});
                 }
-                res.redirect("/success");
-        })
-        return;
+                else{
+                        var objIdSql = "SELECT objectID FROM identifiedObject WHERE "
+                        var mhSql = "INSERT INTO matchhistoryitem (objectID, foundRecyclingInstruction, userID, matchDateTime) values ";
+                        mhSql += '(' + 
+                        pool.escape(result.insertId) +
+                        ', ' +
+                        pool.escape(req.body.foundRecyclingInstruction.toString()) +
+                        ', ' +
+                        pool.escape(req.body.userID.toString()) +
+                        ', ' +
+                        pool.escape(datetime.create(Date.now()).format('Y/m/d H:M:S')) +
+                        ');';
+                        pool.query(mhSql,function (err, result, fields){
+                                if (err) {
+                                        res.status(400).json({status:"Match History could not be saved"});
+                                }
+                                else{
+                                        res.status(200).json({status:"Match History saved"});
+                                }
+                        })
+                }
+        });
 })
 
 //GetAll RecyclingMessage
