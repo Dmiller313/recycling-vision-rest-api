@@ -315,7 +315,7 @@ app.post('/recyclingmessage', (req, res)=>{
 
 app.post('/login', (req, res)=>{
         res.setHeader('Content-Type', 'application/json');
-        var sql = "SELECT password, salt, validationStatus FROM users WHERE email = " +
+        var sql = "SELECT userID, password, salt, validationStatus FROM users WHERE email = " +
                 pool.escape(req.body.email) +
                 ";"
         pool.query(sql, function (err, result, fields){
@@ -332,7 +332,7 @@ app.post('/login', (req, res)=>{
                                 }
                                 if (derivedKey.toString('hex') === result[0].password) {
                                         if(result[0].validationStatus == 1){
-                                                res.status(200).json({ status: "success" });
+                                                res.status(200).json({ status: "success", userID: result[0].userID  });
                                         }
                                         else if(result[0].validationStatus == 2){
                                                 res.status(200).json({ status: "recover" });
