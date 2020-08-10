@@ -220,7 +220,6 @@ app.post('/matchhistoryitem', (req, res)=>{
                         else{
                                 for(i in result){
                                         result[i].objectImage = result[i].objectImage.toString('base64');
-                                        console.log(result[i].objectImage.data);
                                 }
                                 res.status(200).send(result); //will send empty json when no results found
                         }
