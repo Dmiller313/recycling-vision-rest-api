@@ -211,15 +211,20 @@ app.post('/imagepack', (req, res)=>{
 */
 
 app.get('/matchhistoryitem', (req, res)=>{
-        pool.query("SELECT * FROM matchhistoryitem m, identifiedobject i WHERE m.objectID = i.objectID AND m.userID = " + pool.escape(req.body.userID), 
-        function (err, result, fields){
-                if (err) {
-                        res.status(400).json({historyItemID:0}); //represents invalid history item, error
-                }
-                else{
-                        res.status(200).send(result); //will send empty json when no results found
-                }
-        })
+        if(req.body[0] != undefined){
+                pool.query("SELECT * FROM matchhistoryitem m, identifiedobject i WHERE m.objectID = i.objectID AND m.userID = " + pool.escape(req.body[0].userID), 
+                function (err, result, fields){
+                        if (err) {
+                                res.status(400).json({historyItemID:0}); //represents invalid history item, error
+                        }
+                        else{
+                                res.status(200).send(result); //will send empty json when no results found
+                        }
+                })
+        }
+        else{
+                res.status(400).json({historyItemID:0}); //represents invalid history item, error
+        }
 });
 
 app.post('/matchhistoryitem', (req, res)=>{
