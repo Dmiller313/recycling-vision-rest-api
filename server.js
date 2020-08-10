@@ -210,7 +210,7 @@ app.post('/imagepack', (req, res)=>{
 })
 */
 
-app.get('/matchhistoryitem', (req, res)=>{
+app.post('/matchhistoryitem', (req, res)=>{
         if(req.body[0] != undefined){
                 pool.query("SELECT * FROM matchhistoryitem m, identifiedobject i WHERE m.objectID = i.objectID AND m.userID = " + pool.escape(req.body[0].userID), 
                 function (err, result, fields){
@@ -227,7 +227,7 @@ app.get('/matchhistoryitem', (req, res)=>{
         }
 });
 
-app.post('/matchhistoryitem', (req, res)=>{
+app.post('/addmatchhistoryitem', (req, res)=>{
         var objSql = "INSERT INTO identifiedObject (objectName, probabilityMatch, objectImage) values ";
         objSql += '(' + 
         pool.escape(req.body.objectName.toString()) +
