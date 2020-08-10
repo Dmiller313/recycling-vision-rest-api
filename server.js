@@ -219,7 +219,9 @@ app.post('/matchhistoryitem', (req, res)=>{
                         }
                         else{
                                 for(i in result){
-                                        result[i].objectImage = result[i].objectImage.toString('base64');
+                                        var str = "";
+                                        str = result[i].objectImage.toString('utf8');
+                                        result[i].objectImage = str.replace(/\\n/g, '');
                                 }
                                 res.status(200).send(result); //will send empty json when no results found
                         }
