@@ -113,8 +113,13 @@ app.post('/item/single', (req, res)=>{
                         console.log("Error retrieving Item");
                         res.status(400).json({status:"error",data:""});
                 }
-                if(typeof result[0] !== 'undefined') {
-                        res.status(200).json({status:"success",data:result[0].instruction});
+                if(result !== 'undefined'){
+                        if(typeof result[0] !== 'undefined') {
+                                res.status(200).json({status:"success",data:result[0].instruction});
+                        }
+                        else{
+                                res.status(400).json({status:"error",data:""});
+                        }
                 }
                 else{
                         res.status(400).json({status:"error",data:""});
