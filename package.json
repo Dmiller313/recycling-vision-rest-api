@@ -15,7 +15,7 @@
     "express-validator": "^6.6.1",
     "mysql": "^2.18.1",
     "node-datetime": "^2.1.2",
-    "nodemailer": "^6.4.8"
+    "nodemailer": "^6.4.16"
   },
   "devDependencies": {},
   "repository": {
